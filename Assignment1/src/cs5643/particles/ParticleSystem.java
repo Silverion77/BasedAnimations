@@ -1,9 +1,13 @@
 package cs5643.particles;
 
 import java.util.*;
+
 import javax.vecmath.*;
 import javax.media.opengl.*;
+
 import com.jogamp.opengl.util.glsl.*;
+
+import cs5643.forces.CollisionPlane;
 
 
 /**
@@ -23,6 +27,8 @@ public class ParticleSystem //implements Serializable
 
 	/** List of Force objects. */
 	public ArrayList<Force>      F = new ArrayList<Force>();
+	
+	public ArrayList<CollisionPlane> planes = new ArrayList<CollisionPlane>();
 
 	/** 
 	 * true iff prog has been initialized. This cannot be done in the
@@ -41,7 +47,9 @@ public class ParticleSystem //implements Serializable
 
 
 	/** Basic constructor. */
-	public ParticleSystem() {}
+	public ParticleSystem() {
+		planes.add(new CollisionPlane(0,1,0,0,0,0,this));
+	}
 
 	/** 
 	 * Set up the GLSL program. This requires that the current directory (i.e. the package in which
@@ -143,9 +151,42 @@ public class ParticleSystem //implements Serializable
 			p.x_star.scaleAdd(dt, p.v, p.x);
 		}
 		
+		// TODO: For each particle i, find neighbors N_i
+		
+		/* TODO: For each particle i:
+		 * - Compute lambda_i
+		 * - Compute delta_pi using lambda_i
+		 * - Resolve collisions by computing delta_pi_collision
+		 * - x_star = x_star + delta_pi + delta_pi_collision
+		 */
+		
+		// Position correction iterations
+		for (int i = 0; i < Constants.NUM_CORRECTION_ITERATIONS; i++) {
+			for (Particle p : P) {
+				// Correct collisions with box boundaries (planes)
+				for (CollisionPlane plane : planes) {
+					if(plane.detectCollision(p) < 0) {
+						plane.setToMinCorrection(p.delta_collision, p.x_star);
+					}
+				}
+				p.x_star.add(p.delta_collision);
+			}
+		}
+		
+		/* TODO: For each particle i:
+		 * - v_i = (x_star - x) / delta_t
+		 * - v_i += vorticity confinement
+		 * - v_i += XSPH velocity
+		 */
+		
 		// Finalize prediction
 		for(Particle p : P) {
 			p.x.set(p.x_star);
+			for(CollisionPlane plane : planes) {
+				if(plane.detectCollision(p) < 0) {
+					p.setHighlight(true);
+				}
+			}
 		}
 
 		time += dt;

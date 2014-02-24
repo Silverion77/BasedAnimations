@@ -14,5 +14,10 @@ public interface Constants
     /** Camera rotation speed constants. */
     public static final double CAM_SIN_THETA     = Math.sin(0.2);
     public static final double CAM_COS_THETA     = Math.cos(0.2);
+    
+   /**
+    * Number of iterations to run the inner loop (position corrections).
+    */
+    public static final int NUM_CORRECTION_ITERATIONS = 1;
 
 }

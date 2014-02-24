@@ -37,6 +37,8 @@ public class Particle
 
 	/** Force accumulator. */
 	Vector3d f = new Vector3d();
+	
+	Vector3d delta_collision = new Vector3d();
 
 	public Point3d getPos() {
 		return x;

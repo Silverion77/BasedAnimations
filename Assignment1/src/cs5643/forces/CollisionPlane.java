@@ -55,11 +55,25 @@ public class CollisionPlane implements Force {
 		return (numer * numer) / denom;
 	}
 	
-	public boolean passedThrough(Particle p) {
+	public double detectCollision(Particle p) {
 		temp.set(p.getPos());
 		temp.sub(pointOnPlane);
 		double dot = temp.dot(normal);
-		return (dot < 0);
+		return dot;
+	}
+	
+	/**
+	 * Given the point target, sets result to the vector that minimizes the distance from target to the plane.
+	 * @param position
+	 */
+	public void setToMinCorrection(Vector3d result, Point3d target) {
+		// temp = pointOnPlane - target (points from target to point on the plane)
+		result.set(pointOnPlane);
+		result.sub(target);;
+		// project temp (a) onto normal (b); luckily normal is a unit vector, so (a dot b) * b will do
+		double ab = result.dot(normal);
+		result.set(normal);
+		result.scale(ab);
 	}
 
 	@Override
