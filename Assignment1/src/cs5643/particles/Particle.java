@@ -26,6 +26,8 @@ public class Particle
 
 	/** Deformed Position. */
 	Point3d  x = new Point3d();
+	
+	Point3d x_star = new Point3d();
 
 	/** Undeformed/material Position. */
 	Point3d  x0 = new Point3d();
@@ -36,6 +38,14 @@ public class Particle
 	/** Force accumulator. */
 	Vector3d f = new Vector3d();
 
+	public Point3d getPos() {
+		return x;
+	}
+	
+	public Vector3d getVel() {
+		return v;
+	}
+	
 	public void accumulateForce(float x, float y, float z) {
 		f.x += x;
 		f.y += y;
@@ -50,6 +60,7 @@ public class Particle
 	{
 		this.x0.set(x0);
 		x.set(x0);
+		x_star.set(x0);
 	}
 
 	/** Draws spherical particle using a display list. */

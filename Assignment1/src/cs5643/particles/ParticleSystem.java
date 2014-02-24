@@ -127,21 +127,25 @@ public class ParticleSystem //implements Serializable
 		/// Clear force accumulators:
 		for(Particle p : P)  p.f.set(0,0,0);
 
-		{/// Gather forces: (TODO)
+		{
+			// Accumulate external forces.
 			for(Force force : F) {
 				force.applyForce();
 			}
-
-			// HACK: GRAVITY (NEED TO USE Force OBJECT)
-			// for(Particle p : P)   p.f.y -= p.m * 10.f;
 
 		}
 
 		/// TIME-STEP: (Forward Euler for now):
 		for(Particle p : P) {
-			p.v.scaleAdd(dt, p.f, p.v); //p.v += dt * p.f;
-			p.x.scaleAdd(dt, p.v, p.x); //p.x += dt * p.v;
-
+			// Apply external forces
+			p.v.scaleAdd(dt, p.f, p.v);
+			// Predict positions
+			p.x_star.scaleAdd(dt, p.v, p.x);
+		}
+		
+		// Finalize prediction
+		for(Particle p : P) {
+			p.x.set(p.x_star);
 		}
 
 		time += dt;
