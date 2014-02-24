@@ -27,6 +27,7 @@ public class Particle
 	/** Deformed Position. */
 	Point3d  x = new Point3d();
 	
+	/** Predicted position in the middle of one timestep. */
 	Point3d x_star = new Point3d();
 
 	/** Undeformed/material Position. */
@@ -38,7 +39,14 @@ public class Particle
 	/** Force accumulator. */
 	Vector3d f = new Vector3d();
 	
+	Vector3d delta_density = new Vector3d();
+	
 	Vector3d delta_collision = new Vector3d();
+	
+	/**
+	 * Lagrange multiplier for solving density constraints
+	 */
+	double lambda_i;
 
 	public Point3d getPos() {
 		return x;

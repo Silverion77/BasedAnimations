@@ -29,6 +29,8 @@ public class ParticleSystem //implements Serializable
 	public ArrayList<Force>      F = new ArrayList<Force>();
 	
 	public ArrayList<CollisionPlane> planes = new ArrayList<CollisionPlane>();
+	
+	public ArrayList<DensityConstraint> density_cs = new ArrayList<DensityConstraint>();
 
 	/** 
 	 * true iff prog has been initialized. This cannot be done in the
@@ -90,6 +92,8 @@ public class ParticleSystem //implements Serializable
 	{
 		Particle newP = new Particle(p0);
 		P.add(newP);
+		DensityConstraint dc = new DensityConstraint(newP);
+		density_cs.add(dc);
 		return newP;
 	}
 
@@ -156,14 +160,21 @@ public class ParticleSystem //implements Serializable
 		/* TODO: For each particle i:
 		 * - Compute lambda_i
 		 * - Compute delta_pi using lambda_i
-		 * - Resolve collisions by computing delta_pi_collision
+		 * DONE - Resolve collisions by computing delta_pi_collision
 		 * - x_star = x_star + delta_pi + delta_pi_collision
 		 */
 		
 		// Position correction iterations
 		for (int i = 0; i < Constants.NUM_CORRECTION_ITERATIONS; i++) {
+			
+			// Compute all lambda_i
+			for (DensityConstraint dc : density_cs) {
+				// TODO: this
+			}
+			
+			
+			// Correct collisions with box boundaries (planes)
 			for (Particle p : P) {
-				// Correct collisions with box boundaries (planes)
 				for (CollisionPlane plane : planes) {
 					if(plane.detectCollision(p) < 0) {
 						plane.setToMinCorrection(p.delta_collision, p.x_star);
@@ -185,6 +196,9 @@ public class ParticleSystem //implements Serializable
 			for(CollisionPlane plane : planes) {
 				if(plane.detectCollision(p) < 0) {
 					p.setHighlight(true);
+				}
+				else {
+					p.setHighlight(false);
 				}
 			}
 		}
