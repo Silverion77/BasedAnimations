@@ -86,4 +86,13 @@ public class DensityConstraint {
 		return l_i;
 	}
 	
+	/**
+	 * For particle i associated with this constraint, computes lambda_i
+	 * using the list of neighbors currently stored in i.
+	 * @return
+	 */
+	public double compute_lambda() {
+		return compute_lambda(i.neighbors);
+	}
+	
 }

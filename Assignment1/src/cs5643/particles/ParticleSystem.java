@@ -46,11 +46,19 @@ public class ParticleSystem //implements Serializable
 
 	/** The shader program used by the particles. */
 	ShaderProgram prog;
-
+	
+	/** Private vector for scratch work */
+	private Vector3d temp_vec = new Vector3d();
+	private Point3d temp_pt = new Point3d();
 
 	/** Basic constructor. */
 	public ParticleSystem() {
+		planes.add(new CollisionPlane(1,0,0,0,0,0,this));
 		planes.add(new CollisionPlane(0,1,0,0,0,0,this));
+		planes.add(new CollisionPlane(0,0,1,0,0,0,this));
+		planes.add(new CollisionPlane(-1,0,0,1,0,0,this));
+		planes.add(new CollisionPlane(0,-1,0,0,1,0,this));
+		planes.add(new CollisionPlane(0,0,-1,0,0,1,this));
 	}
 
 	/** 
@@ -125,11 +133,22 @@ public class ParticleSystem //implements Serializable
 			p.x.set(p.x0);
 			p.v.set(0,0,0);
 			p.f.set(0,0,0);
+			p.delta_collision.set(0,0,0);
+			p.delta_density.set(0,0,0);
 			p.setHighlight(false);
 		}
 		time = 0;
 	}
-
+	
+	public void findNeighbors(Particle i) {
+		i.neighbors.clear();
+		for(Particle j : P) {
+			if (i.x.distance(j.x) < Constants.KERNEL_RADIUS_H) {
+				i.neighbors.add(j);
+			}
+		}
+	}
+	
 	/**
 	 * Incomplete/Debugging implementation of Forward-Euler
 	 * step. WARNING: Contains buggy debugging forces.
@@ -155,31 +174,52 @@ public class ParticleSystem //implements Serializable
 			p.x_star.scaleAdd(dt, p.v, p.x);
 		}
 		
-		// TODO: For each particle i, find neighbors N_i
+		// For each particle i, find neighbors N_i
+		for(Particle i : P) {
+			findNeighbors(i);
+		}
 		
 		/* TODO: For each particle i:
-		 * - Compute lambda_i
+		 * UNTESTED - Compute lambda_i
 		 * - Compute delta_pi using lambda_i
 		 * DONE - Resolve collisions by computing delta_pi_collision
 		 * - x_star = x_star + delta_pi + delta_pi_collision
 		 */
 		
 		// Position correction iterations
-		for (int i = 0; i < Constants.NUM_CORRECTION_ITERATIONS; i++) {
+		for (int n = 0; n < Constants.NUM_CORRECTION_ITERATIONS; n++) {
 			
 			// Compute all lambda_i
 			for (DensityConstraint dc : density_cs) {
-				// TODO: this
+				dc.compute_lambda();
 			}
 			
+			// Compute all position corrections delta_pi
+			for (Particle i : P) {
+				double scale_by = 1. / Constants.REST_DENSITY;
+				i.delta_density.set(0,0,0);
+				for (Particle j : i.neighbors) {
+					double sum_lambdas = i.lambda_i + j.lambda_i;
+					Kernel.grad_spiky(temp_vec, i, j);
+					temp_vec.scale(sum_lambdas);
+					i.delta_density.add(temp_vec);
+				}
+				i.delta_density.scale(scale_by);
+			}
 			
 			// Correct collisions with box boundaries (planes)
 			for (Particle p : P) {
 				for (CollisionPlane plane : planes) {
 					if(plane.detectCollision(p) < 0) {
+						temp_pt.set(p.x_star);
+						temp_pt.add(p.delta_density);
 						plane.setToMinCorrection(p.delta_collision, p.x_star);
 					}
 				}
+			}
+			
+			for (Particle p : P) {
+				p.x_star.add(p.delta_density);
 				p.x_star.add(p.delta_collision);
 			}
 		}

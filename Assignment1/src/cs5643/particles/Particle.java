@@ -1,5 +1,7 @@
 package cs5643.particles;
 
+import java.util.ArrayList;
+
 import javax.vecmath.*;
 import javax.media.opengl.*;
 import javax.media.opengl.glu.*;
@@ -42,6 +44,8 @@ public class Particle
 	Vector3d delta_density = new Vector3d();
 	
 	Vector3d delta_collision = new Vector3d();
+	
+	ArrayList<Particle> neighbors = new ArrayList<Particle>();
 	
 	/**
 	 * Lagrange multiplier for solving density constraints

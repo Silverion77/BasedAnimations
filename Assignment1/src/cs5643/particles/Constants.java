@@ -19,7 +19,7 @@ public interface Constants
     public static final int NUM_CORRECTION_ITERATIONS = 1;
     
     /** rho_0, the desired standing density of the fluid. */
-    public static final double REST_DENSITY = 1;
+    public static final double REST_DENSITY = 300;
     
     /**
      * The number of bins we are dividing the space into along each of the 3 axes,

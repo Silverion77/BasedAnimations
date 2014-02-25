@@ -35,6 +35,9 @@ public class Kernel {
 	 * @return
 	 */
 	public static double grad_spiky(double r) {
+		if(r == 0) {
+			return 0;
+		}
 		double term1 = -45. / (Math.PI * Constants.H6);
 		double term2 = Math.pow(Constants.KERNEL_RADIUS_H - r, 2);
 		return term1 * term2;
@@ -50,6 +53,9 @@ public class Kernel {
 	public static void grad_spiky(Vector3d result, Particle p1, Particle p2) {
 		result.set(p1.x);
 		result.sub(p2.x);
+		if(result.x == 0 && result.y == 0 && result.z == 0) {
+			return;
+		}
 		double magn = grad_spiky(result.length());
 		result.normalize();
 		result.scale(magn);
