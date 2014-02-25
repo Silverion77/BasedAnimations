@@ -16,22 +16,24 @@ public interface Constants
     public static final double CAM_COS_THETA     = Math.cos(0.2);
     
    /** Number of iterations to run the inner loop (position corrections). */
-    public static final int NUM_CORRECTION_ITERATIONS = 3;
+    public static final int NUM_CORRECTION_ITERATIONS = 2;
     
     /** rho_0, the desired standing density of the fluid. */
-    public static final double REST_DENSITY = 5000;
+    public static final double REST_DENSITY = 10000;
     
     /** The "smearing distance" of the wave functions. */
-    public static final double KERNEL_RADIUS_H = 0.15;
+    public static final double KERNEL_RADIUS_H = 0.11;
     
     public static final double VISCOSITY_C = 0.0001;
     public static final double ELASTICITY_R = 0.1;
     
-    public static final double TENSION_K = 0.000005;
+    public static final double TENSION_K = 0.00001;
     public static final double TENSION_DELTA_Q = 0.2 * KERNEL_RADIUS_H;
     public static final double DELTA_Q2 = TENSION_DELTA_Q * TENSION_DELTA_Q;
     
     public static final double TENSION_N = 4;
+    
+    public static final double VORTICITY_EPSILON = 0.000001;
     
     /** The distance covered by each side of each bin. */
     public static final double BIN_STEP = KERNEL_RADIUS_H;

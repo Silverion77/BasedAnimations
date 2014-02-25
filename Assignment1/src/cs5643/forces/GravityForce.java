@@ -5,6 +5,7 @@ import javax.media.opengl.GL2;
 import cs5643.particles.Force;
 import cs5643.particles.Particle;
 import cs5643.particles.ParticleSystem;
+import cs5643.particles.ParticleSystemBuilder;
 
 public class GravityForce implements Force {
 	

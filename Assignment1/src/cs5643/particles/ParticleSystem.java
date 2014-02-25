@@ -155,6 +155,9 @@ public class ParticleSystem //implements Serializable
 		for(Force force : F) {
 			force.applyForce();
 		}
+		for(Force plane : planes) {
+			plane.applyForce();
+		}
 
 		/// TIME-STEP: (Forward Euler for now):
 		for(Particle p : P) {
@@ -162,9 +165,6 @@ public class ParticleSystem //implements Serializable
 			p.v.scaleAdd(dt, p.f, p.v);
 			// Predict positions
 			p.x_star.scaleAdd(dt, p.v, p.x);
-		}
-		for(Force plane : planes) {
-			plane.applyForce();
 		}
 
 		// For each particle i, find neighbors N_i
@@ -176,10 +176,10 @@ public class ParticleSystem //implements Serializable
 		}
 
 		/* TODO: For each particle i:
-		 * UNTESTED - Compute lambda_i
-		 * - Compute delta_pi using lambda_i
+		 * DONE - Compute lambda_i
+		 * DONE - Compute delta_pi using lambda_i
 		 * DONE - Resolve collisions by computing delta_pi_collision
-		 * - x_star = x_star + delta_pi + delta_pi_collision
+		 * DONE - x_star = x_star + delta_pi + delta_pi_collision
 		 */
 
 		// Position correction iterations
@@ -192,11 +192,14 @@ public class ParticleSystem //implements Serializable
 
 			// Compute all position corrections delta_pi
 			for (Particle i : P) {
+				i.density = 0;
 				double scale_by = 1. / Constants.REST_DENSITY;
 				i.delta_density.set(0,0,0);
 				for (Particle j : i.neighbors) {
 					// Surface tension correction
-					double s_corr = Math.pow(Kernel.poly6(i, j) /
+					double p6result = Kernel.poly6(i, j);
+					i.density += p6result;
+					double s_corr = Math.pow(p6result /
 									Kernel.poly6(Constants.DELTA_Q2),
 									Constants.TENSION_N);
 					s_corr *= (-Constants.TENSION_K);
@@ -210,11 +213,12 @@ public class ParticleSystem //implements Serializable
 
 			// Correct collisions with box boundaries (planes)
 			for (Particle p : P) {
-				for (CollisionPlane plane : planes) {
-					if(plane.detectCollision(p) < 0) {
-						temp_pt.set(p.x_star);
-						temp_pt.add(p.delta_density);
-						plane.setToMinCorrection(p.delta_collision, temp_pt);
+				p.delta_collision.set(0,0,0);
+				for (CollisionPlane plane : planes) { {
+					temp_pt.set(p.x_star);
+					temp_pt.add(p.delta_density);
+					if(plane.detectCollision(temp_pt) < 0)
+						plane.addToMinCorrection(p.delta_collision, temp_pt);
 					}
 				}
 			}
@@ -237,13 +241,28 @@ public class ParticleSystem //implements Serializable
 			p.temp.scale(1. / dt);
 			p.v.set(p.temp);
 		}
+		
+		// Compute vorticity at each particle
+		for(Particle p : P) {
+			p.updateVorticityW();
+		}
+		
+		// Compute vorticity normal at each particle
+		for(Particle p : P) {
+			p.updateVorticityN();
+		}
+		
+		// Apply vorticity confinement
+		for(Particle p : P) {
+			p.applyVorticity();
+		}
 
 		// Compute XSPH viscosity -- all at once so they don't affect each other
 		for(Particle p : P) {
 			p.updateXSPHViscosity();
 		}
 		
-		// Apply XSPH velocity all at once
+		// Apply XSPH viscosity all at once
 		for(Particle p : P) {
 			p.applyXSPHViscosity();
 		}
@@ -251,14 +270,6 @@ public class ParticleSystem //implements Serializable
 		// Finalize prediction
 		for(Particle p : P) {
 			p.x.set(p.x_star);
-			for(CollisionPlane plane : planes) {
-				if(plane.detectCollision(p) < 0) {
-					p.setHighlight(true);
-				}
-				else {
-					p.setHighlight(false);
-				}
-			}
 		}
 
 		time += dt;

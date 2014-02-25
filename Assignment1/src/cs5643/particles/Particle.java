@@ -27,7 +27,7 @@ public class Particle
 	double   m = Constants.PARTICLE_MASS;
 
 	/** Deformed Position. */
-	Point3d  x = new Point3d();
+	public Point3d  x = new Point3d();
 	
 	/** Predicted position in the middle of one timestep. */
 	Point3d x_star = new Point3d();
@@ -36,14 +36,17 @@ public class Particle
 	Point3d  x0 = new Point3d();
 
 	/** Velocity. */
-	Vector3d v = new Vector3d();
+	public Vector3d v = new Vector3d();
 
 	/** Force accumulator. */
 	Vector3d f = new Vector3d();
 	
-	Vector3d delta_density = new Vector3d();
+	double density = 0;
 	
+	Vector3d delta_density = new Vector3d();
 	Vector3d delta_collision = new Vector3d();
+	
+	Point3d x_star_plus_delta = new Point3d();
 	
 	ArrayList<Particle> neighbors = new ArrayList<Particle>();
 	
@@ -52,6 +55,8 @@ public class Particle
 	
 	/** Stores the viscosity adjustment for velocity. */
 	Vector3d viscosity = new Vector3d();
+	Vector3d vorticity = new Vector3d();
+	Vector3d vort_normal = new Vector3d();
 	
 	/**
 	 * Lagrange multiplier for solving density constraints
@@ -60,6 +65,12 @@ public class Particle
 
 	public Point3d getPos() {
 		return x;
+	}
+	
+	public Point3d getCollisionPos() {
+		x_star_plus_delta.set(x_star);
+		x_star_plus_delta.add(delta_density);
+		return x_star_plus_delta;
 	}
 	
 	public Vector3d getVel() {
@@ -109,7 +120,8 @@ public class Particle
 		}
 
 		// Hack to make things more colorful/interesting
-		c[1] = (float)x.y;
+		c[1] = (float)x.y + (float)((1. - x.y) / 3.);
+		c[2] = (float)x.x + (float)((1. - x.x) / 3.);
 
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, c, 0); // Color used by shader
 
@@ -129,6 +141,8 @@ public class Particle
 		return highlight; 
 	}
 	
+	static double max_visc = 0;
+	
 	/**
 	 * Updates this particle's velocity with the XSPH viscosity adjustment,
 	 * using the current list of neighbors.
@@ -144,10 +158,53 @@ public class Particle
 			viscosity.add(temp);
 		}
 		viscosity.scale(Constants.VISCOSITY_C);
+//		double l = viscosity.length();
+//		if (l > max_visc) {
+//			max_visc = l;
+//			System.out.println("new max visc: " + l);
+//		}
 	}
 	
 	public void applyXSPHViscosity() {
 		v.add(viscosity);
+	}
+	
+	public void updateVorticityW() {
+		vorticity.set(0,0,0);
+		for(Particle j : neighbors) {
+			if(this.equals(j)) continue;
+			vorticity.set(j.v);
+			vorticity.sub(this.v);
+			Kernel.grad_spiky(temp, this, j);
+			vorticity.cross(vorticity, temp);
+		}
+	}
+	
+	public void updateVorticityN() {
+		vort_normal.set(0,0,0);
+		double scalar = 0;
+		for(Particle j : neighbors) {
+			if(this.equals(j)) continue;
+			scalar = (1. / j.density) * j.vorticity.length();
+			Kernel.grad_spiky(temp, this, j);
+			temp.scale(scalar);
+			vort_normal.add(temp);
+		}
+		vort_normal.normalize();
+	}
+	
+	public void applyVorticity() {
+		temp.set(0,0,0);
+		temp.cross(vort_normal, vorticity);
+		temp.normalize();
+		temp.scale(Constants.VORTICITY_EPSILON * ParticleSystemBuilder.DT);
+		if(Double.isNaN(temp.x) || Double.isNaN(temp.y) || Double.isNaN(temp.z)) {
+			return;
+		}
+		if(Double.isInfinite(temp.x) || Double.isInfinite(temp.x) || Double.isInfinite(temp.x)) {
+			return;
+		}
+		v.add(temp);
 	}
 
 }

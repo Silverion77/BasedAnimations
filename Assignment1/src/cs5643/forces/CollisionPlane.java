@@ -56,25 +56,31 @@ public class CollisionPlane implements Force {
 		return (numer * numer) / denom;
 	}
 	
-	public double detectCollision(Particle p) {
-		temp.set(p.getPos());
+	/**
+	 * Checks if the point p is in collision with this plane.
+	 * @param p
+	 * @return
+	 */
+	public double detectCollision(Point3d p) {
+		temp.set(p);
 		temp.sub(pointOnPlane);
 		double dot = temp.dot(normal);
 		return dot;
 	}
 	
 	/**
-	 * Given the point target, sets result to the vector that minimizes the distance from target to the plane.
+	 * Given the point target, add collision resolution vector to result.
 	 * @param position
 	 */
-	public void setToMinCorrection(Vector3d result, Point3d target) {
+	public void addToMinCorrection(Vector3d result, Point3d target) {
 		// temp = pointOnPlane - target (points from target to point on the plane)
-		result.set(pointOnPlane);
-		result.sub(target);;
+		temp.set(pointOnPlane);
+		temp.sub(target);
 		// project temp (a) onto normal (b); luckily normal is a unit vector, so (a dot b) * b will do
-		double ab = result.dot(normal);
-		result.set(normal);
-		result.scale(ab);
+		double ab = temp.dot(normal);
+		temp.set(normal);
+		temp.scale(ab);
+		result.add(temp);
 	}
 
 	@Override
@@ -84,8 +90,10 @@ public class CollisionPlane implements Force {
 				temp.set(particle.getForce());
 				double Nf = normal.dot(temp);
 				temp.scale(Nf);
-				temp.negate();
-				particle.accumulateForce(temp.x, temp.y, temp.z);
+				if(temp.dot(particle.getForce()) < 0) {
+					temp.negate();
+					particle.accumulateForce(temp.x, temp.y, temp.z);	
+				}
 			}
 		}
 		
@@ -100,6 +108,15 @@ public class CollisionPlane implements Force {
 	@Override
 	public ParticleSystem getParticleSystem() {
 		return ps;
+	}
+	
+	public void reflect(Particle p) {
+		temp.set(p.v);
+		double Nx = normal.dot(temp);
+		temp.scale(Nx);
+		p.v.sub(temp);
+		temp.scale(Constants.ELASTICITY_R);
+		p.v.sub(temp);
 	}
 	
 	
