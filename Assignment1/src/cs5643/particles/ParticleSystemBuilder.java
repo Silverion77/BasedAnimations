@@ -29,7 +29,7 @@ public class ParticleSystemBuilder implements GLEventListener
 {
 	private FrameExporter frameExporter;
 
-	private static int N_STEPS_PER_FRAME = 500;
+	private static int N_STEPS_PER_FRAME = 8;
 
 	private GLU glu;
 

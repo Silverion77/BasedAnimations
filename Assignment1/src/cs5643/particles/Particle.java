@@ -47,6 +47,12 @@ public class Particle
 	
 	ArrayList<Particle> neighbors = new ArrayList<Particle>();
 	
+	/** For scratch work. */
+	Vector3d temp = new Vector3d();
+	
+	/** Stores the viscosity adjustment for velocity. */
+	Vector3d viscosity = new Vector3d();
+	
 	/**
 	 * Lagrange multiplier for solving density constraints
 	 */
@@ -59,8 +65,11 @@ public class Particle
 	public Vector3d getVel() {
 		return v;
 	}
+	public Vector3d getForce() {
+		return f;
+	}
 	
-	public void accumulateForce(float x, float y, float z) {
+	public void accumulateForce(double x, double y, double z) {
 		f.x += x;
 		f.y += y;
 		f.z += z;
@@ -118,6 +127,27 @@ public class Particle
 	/** True if particle should be drawn highlighted. */
 	public boolean getHighlight() { 
 		return highlight; 
+	}
+	
+	/**
+	 * Updates this particle's velocity with the XSPH viscosity adjustment,
+	 * using the current list of neighbors.
+	 */
+	public void updateXSPHViscosity() {
+		viscosity.set(0,0,0);
+		for(Particle j : neighbors) {
+			if(this.equals(j)) continue;
+			temp.set(j.v);
+			temp.sub(this.v);
+			double p6result = Kernel.poly6(this, j);
+			temp.scale(p6result);
+			viscosity.add(temp);
+		}
+		viscosity.scale(Constants.VISCOSITY_C);
+	}
+	
+	public void applyXSPHViscosity() {
+		v.add(viscosity);
 	}
 
 }

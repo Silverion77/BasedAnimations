@@ -22,6 +22,7 @@ public class Kernel {
 	 * @return
 	 */
 	public static double poly6(double rSquared) {
+		if(rSquared > Constants.H2) return 0;
 		double term2 = Math.pow(Constants.H2 - rSquared, 3);
 		return POLY6_CONSTS * term2;
 	}

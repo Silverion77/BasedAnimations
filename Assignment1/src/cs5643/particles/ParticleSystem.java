@@ -27,9 +27,9 @@ public class ParticleSystem //implements Serializable
 
 	/** List of Force objects. */
 	public ArrayList<Force>      F = new ArrayList<Force>();
-	
+
 	public ArrayList<CollisionPlane> planes = new ArrayList<CollisionPlane>();
-	
+
 	public ArrayList<DensityConstraint> density_cs = new ArrayList<DensityConstraint>();
 
 	/** 
@@ -46,11 +46,11 @@ public class ParticleSystem //implements Serializable
 
 	/** The shader program used by the particles. */
 	ShaderProgram prog;
-	
+
 	/** Private vector for scratch work */
 	private Vector3d temp_vec = new Vector3d();
 	private Point3d temp_pt = new Point3d();
-	
+
 	private SpaceMap space_map = new SpaceMap();
 
 	/** Basic constructor. */
@@ -141,16 +141,7 @@ public class ParticleSystem //implements Serializable
 		}
 		time = 0;
 	}
-	
-	public void findNeighbors(Particle i) {
-		i.neighbors.clear();
-		for(Particle j : P) {
-			if (i.x.distance(j.x) < Constants.KERNEL_RADIUS_H) {
-				i.neighbors.add(j);
-			}
-		}
-	}
-	
+
 	/**
 	 * Incomplete/Debugging implementation of Forward-Euler
 	 * step. WARNING: Contains buggy debugging forces.
@@ -160,12 +151,9 @@ public class ParticleSystem //implements Serializable
 		/// Clear force accumulators:
 		for(Particle p : P)  p.f.set(0,0,0);
 
-		{
-			// Accumulate external forces.
-			for(Force force : F) {
-				force.applyForce();
-			}
-
+		// Accumulate external forces.
+		for(Force force : F) {
+			force.applyForce();
 		}
 
 		/// TIME-STEP: (Forward Euler for now):
@@ -175,43 +163,51 @@ public class ParticleSystem //implements Serializable
 			// Predict positions
 			p.x_star.scaleAdd(dt, p.v, p.x);
 		}
-		
+		for(Force plane : planes) {
+			plane.applyForce();
+		}
+
 		// For each particle i, find neighbors N_i
 		space_map.clear();
 		space_map.addAll(P);
-		
+
 		for(Particle i : P) {
 			space_map.getNeighbors(i);
 		}
-		
+
 		/* TODO: For each particle i:
 		 * UNTESTED - Compute lambda_i
 		 * - Compute delta_pi using lambda_i
 		 * DONE - Resolve collisions by computing delta_pi_collision
 		 * - x_star = x_star + delta_pi + delta_pi_collision
 		 */
-		
+
 		// Position correction iterations
 		for (int n = 0; n < Constants.NUM_CORRECTION_ITERATIONS; n++) {
-			
+
 			// Compute all lambda_i
 			for (DensityConstraint dc : density_cs) {
 				dc.compute_lambda();
 			}
-			
+
 			// Compute all position corrections delta_pi
 			for (Particle i : P) {
 				double scale_by = 1. / Constants.REST_DENSITY;
 				i.delta_density.set(0,0,0);
 				for (Particle j : i.neighbors) {
-					double sum_lambdas = i.lambda_i + j.lambda_i;
+					// Surface tension correction
+					double s_corr = Math.pow(Kernel.poly6(i, j) /
+									Kernel.poly6(Constants.DELTA_Q2),
+									Constants.TENSION_N);
+					s_corr *= (-Constants.TENSION_K);
+					double sum_lambdas = i.lambda_i + j.lambda_i + s_corr;
 					Kernel.grad_spiky(temp_vec, i, j);
 					temp_vec.scale(sum_lambdas);
 					i.delta_density.add(temp_vec);
 				}
 				i.delta_density.scale(scale_by);
 			}
-			
+
 			// Correct collisions with box boundaries (planes)
 			for (Particle p : P) {
 				for (CollisionPlane plane : planes) {
@@ -222,19 +218,36 @@ public class ParticleSystem //implements Serializable
 					}
 				}
 			}
-			
+
 			for (Particle p : P) {
 				p.x_star.add(p.delta_density);
 				p.x_star.add(p.delta_collision);
 			}
 		}
-		
+
 		/* TODO: For each particle i:
 		 * - v_i = (x_star - x) / delta_t
 		 * - v_i += vorticity confinement
-		 * - v_i += XSPH velocity
+		 * - v_i += XSPH viscosity
 		 */
+
+		for(Particle p : P) {
+			p.temp.set(p.x_star);
+			p.temp.sub(p.x);
+			p.temp.scale(1. / dt);
+			p.v.set(p.temp);
+		}
+
+		// Compute XSPH viscosity -- all at once so they don't affect each other
+		for(Particle p : P) {
+			p.updateXSPHViscosity();
+		}
 		
+		// Apply XSPH velocity all at once
+		for(Particle p : P) {
+			p.applyXSPHViscosity();
+		}
+
 		// Finalize prediction
 		for(Particle p : P) {
 			p.x.set(p.x_star);
@@ -247,9 +260,9 @@ public class ParticleSystem //implements Serializable
 				}
 			}
 		}
-		
+
 		time += dt;
-		System.out.println("step complete: time " + time);
+//		System.out.println("step complete: time " + time);
 	}
 
 	/**

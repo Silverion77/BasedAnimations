@@ -4,6 +4,7 @@ import javax.media.opengl.GL2;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
+import cs5643.particles.Constants;
 import cs5643.particles.Force;
 import cs5643.particles.Particle;
 import cs5643.particles.ParticleSystem;
@@ -80,7 +81,11 @@ public class CollisionPlane implements Force {
 	public void applyForce() {
 		for(Particle particle : ps.P) {
 			if(getDistanceSq(particle.getPos()) < 0.001) {
-				// apply the normal force
+				temp.set(particle.getForce());
+				double Nf = normal.dot(temp);
+				temp.scale(Nf);
+				temp.negate();
+				particle.accumulateForce(temp.x, temp.y, temp.z);
 			}
 		}
 		

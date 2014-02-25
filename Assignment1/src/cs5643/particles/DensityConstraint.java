@@ -17,11 +17,9 @@ public class DensityConstraint {
 
 	private Particle i;
 	private Vector3d grad_result;
-	private Vector3d temp;
 	
 	public DensityConstraint(Particle p) {
 		this.i = p;
-		temp = new Vector3d();
 		grad_result = new Vector3d();
 	}
 	
@@ -54,8 +52,8 @@ public class DensityConstraint {
 		grad_result.set(0,0,0);
 		if(i.equals(k)) {
 			for(Particle j : ps) {
-				Kernel.grad_spiky(temp, i, j);
-				grad_result.add(temp);
+				Kernel.grad_spiky(i.temp, i, j);
+				grad_result.add(i.temp);
 			}
 		}
 		else {
