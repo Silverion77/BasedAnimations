@@ -19,19 +19,15 @@ public interface Constants
     public static final int NUM_CORRECTION_ITERATIONS = 1;
     
     /** rho_0, the desired standing density of the fluid. */
-    public static final double REST_DENSITY = 300;
-    
-    /**
-     * The number of bins we are dividing the space into along each of the 3 axes,
-     * for the 3-dimensional list structure.
-     */
-    public static final int NUM_BINS = 10;
-    
-    /** The distance covered by each side of each bin. */
-    public static final double BIN_STEP = 1.0 / NUM_BINS;
+    public static final double REST_DENSITY = 250;
     
     /** The "smearing distance" of the wave functions. */
     public static final double KERNEL_RADIUS_H = 0.1;
+    
+    /** The distance covered by each side of each bin. */
+    public static final double BIN_STEP = KERNEL_RADIUS_H;
+    
+    public static final int NUM_BINS = (int)Math.ceil(1. / BIN_STEP);
     
     /**
      * "Alternatively, constraint force mixing (CFM) [Smith 2006] can be 

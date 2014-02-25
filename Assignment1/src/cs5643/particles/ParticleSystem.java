@@ -50,6 +50,8 @@ public class ParticleSystem //implements Serializable
 	/** Private vector for scratch work */
 	private Vector3d temp_vec = new Vector3d();
 	private Point3d temp_pt = new Point3d();
+	
+	private SpaceMap space_map = new SpaceMap();
 
 	/** Basic constructor. */
 	public ParticleSystem() {
@@ -175,8 +177,11 @@ public class ParticleSystem //implements Serializable
 		}
 		
 		// For each particle i, find neighbors N_i
+		space_map.clear();
+		space_map.addAll(P);
+		
 		for(Particle i : P) {
-			findNeighbors(i);
+			space_map.getNeighbors(i);
 		}
 		
 		/* TODO: For each particle i:
@@ -213,7 +218,7 @@ public class ParticleSystem //implements Serializable
 					if(plane.detectCollision(p) < 0) {
 						temp_pt.set(p.x_star);
 						temp_pt.add(p.delta_density);
-						plane.setToMinCorrection(p.delta_collision, p.x_star);
+						plane.setToMinCorrection(p.delta_collision, temp_pt);
 					}
 				}
 			}
@@ -242,8 +247,9 @@ public class ParticleSystem //implements Serializable
 				}
 			}
 		}
-
+		
 		time += dt;
+		System.out.println("step complete: time " + time);
 	}
 
 	/**

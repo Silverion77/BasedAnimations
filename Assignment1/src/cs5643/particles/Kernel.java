@@ -9,6 +9,9 @@ import javax.vecmath.Vector3d;
  *
  */
 public class Kernel {
+	
+	public static double POLY6_CONSTS = 315. / (64. * Math.PI * Constants.H9);
+	public static double SPIKY_CONSTS = -45. / (Math.PI * Constants.H6);
 
 	/**
 	 * The poly6 kernel.
@@ -18,14 +21,13 @@ public class Kernel {
 	 * @param r The distance from the particle.
 	 * @return
 	 */
-	public static double poly6(double r) {
-		double term1 = 315. / (64. * Math.PI * Constants.H9);
-		double term2 = Math.pow(Constants.H2 - (r*r), 3);
-		return term1 * term2;
+	public static double poly6(double rSquared) {
+		double term2 = Math.pow(Constants.H2 - rSquared, 3);
+		return POLY6_CONSTS * term2;
 	}
 	
 	public static double poly6(Particle i, Particle j) {
-		return poly6(i.x.distance(j.x));
+		return poly6(i.x_star.distanceSquared(j.x_star));
 	}
 	
 	/**
@@ -38,9 +40,8 @@ public class Kernel {
 		if(r == 0) {
 			return 0;
 		}
-		double term1 = -45. / (Math.PI * Constants.H6);
 		double term2 = Math.pow(Constants.KERNEL_RADIUS_H - r, 2);
-		return term1 * term2;
+		return SPIKY_CONSTS * term2;
 	}
 	
 	/**
@@ -51,8 +52,8 @@ public class Kernel {
 	 * @return
 	 */
 	public static void grad_spiky(Vector3d result, Particle p1, Particle p2) {
-		result.set(p1.x);
-		result.sub(p2.x);
+		result.set(p1.x_star);
+		result.sub(p2.x_star);
 		if(result.x == 0 && result.y == 0 && result.z == 0) {
 			return;
 		}

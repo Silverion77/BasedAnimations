@@ -78,7 +78,7 @@ public class DensityConstraint {
 		double numer = this.evaluate(ps);
 		double denom = Constants.MAGIC_EPSILON;
 		for (Particle k : ps) {
-			double grad_magn = Kernel.grad_spiky(i.x.distance(k.x));
+			double grad_magn = Kernel.grad_spiky(i.x_star.distance(k.x_star));
 			denom += grad_magn * grad_magn;
 		}
 		double l_i = -(numer/denom);
