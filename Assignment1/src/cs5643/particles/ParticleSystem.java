@@ -175,21 +175,15 @@ public class ParticleSystem //implements Serializable
 			space_map.getNeighbors(i);
 		}
 
-		/* TODO: For each particle i:
-		 * DONE - Compute lambda_i
-		 * DONE - Compute delta_pi using lambda_i
-		 * DONE - Resolve collisions by computing delta_pi_collision
-		 * DONE - x_star = x_star + delta_pi + delta_pi_collision
-		 */
-
 		// Position correction iterations
 		for (int n = 0; n < Constants.NUM_CORRECTION_ITERATIONS; n++) {
 
+			
 			// Compute all lambda_i
 			for (DensityConstraint dc : density_cs) {
 				dc.compute_lambda();
 			}
-
+			
 			// Compute all position corrections delta_pi
 			for (Particle i : P) {
 				i.density = 0;
@@ -203,12 +197,16 @@ public class ParticleSystem //implements Serializable
 									Kernel.poly6(Constants.DELTA_Q2),
 									Constants.TENSION_N);
 					s_corr *= (-Constants.TENSION_K);
+					
 					double sum_lambdas = i.lambda_i + j.lambda_i + s_corr;
 					Kernel.grad_spiky(temp_vec, i, j);
 					temp_vec.scale(sum_lambdas);
 					i.delta_density.add(temp_vec);
 				}
 				i.delta_density.scale(scale_by);
+				if(i.delta_density.length() > 1) {
+					System.out.println(i.delta_density.length());
+				}
 			}
 
 			// Correct collisions with box boundaries (planes)
@@ -229,11 +227,6 @@ public class ParticleSystem //implements Serializable
 			}
 		}
 
-		/* TODO: For each particle i:
-		 * - v_i = (x_star - x) / delta_t
-		 * - v_i += vorticity confinement
-		 * - v_i += XSPH viscosity
-		 */
 
 		for(Particle p : P) {
 			p.temp.set(p.x_star);

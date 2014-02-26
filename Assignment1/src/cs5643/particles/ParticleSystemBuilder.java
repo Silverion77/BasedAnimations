@@ -34,7 +34,7 @@ public class ParticleSystemBuilder implements GLEventListener
 	private GLU glu;
 
 	/** Default graphics time step size. */
-	public static final double DT = 0.016;
+	public static final double DT = 0.0125;
 
 	/** Main window frame. */
 	JFrame frame = null;

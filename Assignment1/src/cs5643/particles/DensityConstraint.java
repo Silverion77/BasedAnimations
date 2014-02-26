@@ -73,6 +73,7 @@ public class DensityConstraint {
 	 * @return
 	 */
 	public double compute_lambda(List<Particle> ps) {
+		i.lambda_i = 0;
 		double numer = this.evaluate(ps);
 		double denom = Constants.MAGIC_EPSILON;
 		for (Particle k : ps) {

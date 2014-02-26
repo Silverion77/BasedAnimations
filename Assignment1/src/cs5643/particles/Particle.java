@@ -114,15 +114,13 @@ public class Particle
 		}
 
 		/// COLOR: DEFAULT CYAN; GREEN IF HIGHLIGHTED
-		float[] c = {0f, 1f, 1f, 1f};//default: cyan
+		float[] c = {0f, 0.7f, 1f, 1f};//default: cyan
+		c[1] = (float)x.y;
 		if(highlight) {
 			c[2] = 0;
 		}
-
-		// Hack to make things more colorful/interesting
-		c[1] = (float)x.y + (float)((1. - x.y) / 3.);
-		c[2] = (float)x.x + (float)((1. - x.x) / 3.);
-
+		c[0] = Math.min((float)this.lambda_i * 10, 1);
+		
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, c, 0); // Color used by shader
 
 		/// DRAW ORIGIN-CIRCLE TRANSLATED TO "p":
@@ -150,7 +148,6 @@ public class Particle
 	public void updateXSPHViscosity() {
 		viscosity.set(0,0,0);
 		for(Particle j : neighbors) {
-			if(this.equals(j)) continue;
 			temp.set(j.v);
 			temp.sub(this.v);
 			double p6result = Kernel.poly6(this, j);
@@ -158,11 +155,6 @@ public class Particle
 			viscosity.add(temp);
 		}
 		viscosity.scale(Constants.VISCOSITY_C);
-//		double l = viscosity.length();
-//		if (l > max_visc) {
-//			max_visc = l;
-//			System.out.println("new max visc: " + l);
-//		}
 	}
 	
 	public void applyXSPHViscosity() {
