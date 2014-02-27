@@ -59,7 +59,7 @@ public class ParticleSystem //implements Serializable
 		planes.add(new CollisionPlane(0,1,0,0,0,0,this));
 		planes.add(new CollisionPlane(0,0,1,0,0,0,this));
 		planes.add(new CollisionPlane(-1,0,0,1,0,0,this));
-		planes.add(new CollisionPlane(0,-1,0,0,1,0,this));
+//		planes.add(new CollisionPlane(0,-1,0,0,1,0,this));
 		planes.add(new CollisionPlane(0,0,-1,0,0,1,this));
 	}
 
@@ -204,9 +204,6 @@ public class ParticleSystem //implements Serializable
 					i.delta_density.add(temp_vec);
 				}
 				i.delta_density.scale(scale_by);
-				if(i.delta_density.length() > 1) {
-					System.out.println(i.delta_density.length());
-				}
 			}
 
 			// Correct collisions with box boundaries (planes)

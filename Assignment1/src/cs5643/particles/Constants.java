@@ -24,16 +24,16 @@ public interface Constants
     /** The "smearing distance" of the wave functions. */
     public static final double KERNEL_RADIUS_H = 0.1;
     
-    public static final double VISCOSITY_C = 0.00001;
+    public static final double VISCOSITY_C = 0.000001;
     public static final double ELASTICITY_R = 0.1;
     
-    public static final double TENSION_K = 0.1;
+    public static final double TENSION_K = 1;
     public static final double TENSION_DELTA_Q = 0.2 * KERNEL_RADIUS_H;
     public static final double DELTA_Q2 = TENSION_DELTA_Q * TENSION_DELTA_Q;
     
     public static final double TENSION_N = 4;
     
-    public static final double VORTICITY_EPSILON = 1;
+    public static final double VORTICITY_EPSILON = 0.5;
     
     /** :( */
     public static final double SPIKY_DAMPING = 0.001;
