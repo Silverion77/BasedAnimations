@@ -15,7 +15,7 @@ import javax.media.opengl.glu.*;
 public class Particle
 {
 	/** Radius of particle's sphere graphic. */
-	public static final double PARTICLE_RADIUS = 0.015;
+	public static final double PARTICLE_RADIUS = 0.02;
 
 	/** Display list index. */
 	private static int PARTICLE_DISPLAY_LIST = -1;
@@ -119,7 +119,7 @@ public class Particle
 		if(highlight) {
 			c[2] = 0;
 		}
-		c[0] = Math.min((float)this.lambda_i * 10, 1);
+		c[0] = Math.min((float)this.lambda_i * 20, 1);
 		
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, c, 0); // Color used by shader
 

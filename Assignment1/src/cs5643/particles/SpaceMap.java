@@ -60,14 +60,16 @@ public class SpaceMap {
 					triple.setAll(i,j,k);
 					List<Particle> lst = map.get(triple);
 					if(lst != null) {
-						tempList.addAll(lst);
+						for (Particle q : lst) {
+							if(q.x.distanceSquared(p.x) < Constants.H2) {
+								p.neighbors.add(q);
+							}
+							if(p.neighbors.size() > 20) {
+								break;
+							}
+						}
 					}
 				}
-			}
-		}
-		for(Particle p2 : tempList) {
-			if(p.x.distanceSquared(p2.x) < Constants.H2) {
-				p.neighbors.add(p2);
 			}
 		}
 	}
