@@ -172,7 +172,7 @@ public class ParticleSystem //implements Serializable
 			force.applyForce();
 		}
 		for(Force plane : planes) {
-			plane.applyForce();
+//			plane.applyForce();
 		}
 		for(Force sphere : spheres) {
 //			sphere.applyForce();

@@ -392,6 +392,29 @@ public class ParticleSystemBuilder implements GLEventListener
 			case KeyEvent.VK_DOWN:
 				eyePos.y -= 1;
 				break;
+			
+			case KeyEvent.VK_W:
+				targetPos.y += 0.1;
+				break;
+			case KeyEvent.VK_S:
+				targetPos.y -= 0.1;
+				break;
+			case KeyEvent.VK_A:
+				double xdiff1 = targetPos.x - eyePos.x;
+				double zdiff1 = targetPos.z - eyePos.z;
+				Vector3d v = new Vector3d(zdiff1, 0, -xdiff1);
+				v.normalize();
+				v.scale(0.1);
+				targetPos.add(v);
+				break;
+			case KeyEvent.VK_D:
+				double xdiff2 = targetPos.x - eyePos.x;
+				double zdiff2 = targetPos.z - eyePos.z;
+				Vector3d v2 = new Vector3d(-zdiff2, 0, xdiff2);
+				v2.normalize();
+				v2.scale(0.1);
+				targetPos.add(v2);
+				break;
 
 			default:
 			}
