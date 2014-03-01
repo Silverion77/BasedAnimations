@@ -8,7 +8,7 @@ import javax.media.opengl.*;
 import com.jogamp.opengl.util.glsl.*;
 
 import cs5643.forces.CollisionPlane;
-
+import cs5643.forces.CollisionSphere;
 
 /**
  * Maintains dynamic lists of Particle and Force objects, and provides
@@ -29,6 +29,8 @@ public class ParticleSystem //implements Serializable
 	public ArrayList<Force>      F = new ArrayList<Force>();
 
 	public ArrayList<CollisionPlane> planes = new ArrayList<CollisionPlane>();
+	
+	public ArrayList<CollisionSphere> spheres = new ArrayList<CollisionSphere>();
 
 	public ArrayList<DensityConstraint> density_cs = new ArrayList<DensityConstraint>();
 
@@ -61,6 +63,7 @@ public class ParticleSystem //implements Serializable
 		planes.add(new CollisionPlane(-1,0,0,1,0,0,this));
 //		planes.add(new CollisionPlane(0,-1,0,0,1,0,this));
 		planes.add(new CollisionPlane(0,0,-1,0,0,1,this));
+		spheres.add(new CollisionSphere(new Point3d(.5,.5,.5), this));
 	}
 
 	/** 
@@ -158,6 +161,9 @@ public class ParticleSystem //implements Serializable
 		for(Force plane : planes) {
 			plane.applyForce();
 		}
+		for(Force sphere : spheres) {
+//			sphere.applyForce();
+		}
 
 		/// TIME-STEP: (Forward Euler for now):
 		for(Particle p : P) {
@@ -209,11 +215,19 @@ public class ParticleSystem //implements Serializable
 			// Correct collisions with box boundaries (planes)
 			for (Particle p : P) {
 				p.delta_collision.set(0,0,0);
-				for (CollisionPlane plane : planes) { {
+				for (CollisionPlane plane : planes) {
 					temp_pt.set(p.x_star);
 					temp_pt.add(p.delta_density);
-					if(plane.detectCollision(temp_pt) < 0)
+					if(plane.detectCollision(temp_pt) < 0) {
 						plane.addToMinCorrection(p.delta_collision, temp_pt);
+					}
+				}
+				for (CollisionSphere sphere : spheres) {
+					temp_pt.set(p.x_star);
+					temp_pt.add(p.delta_density);
+					System.out.println(temp_pt);
+					if (sphere.detectCollision(temp_pt)) {
+						sphere.addToMinCorrection(p.delta_collision, temp_pt);
 					}
 				}
 			}
@@ -281,6 +295,10 @@ public class ParticleSystem //implements Serializable
 
 		for(Particle particle : P) {
 			particle.display(gl);
+		}
+		
+		for (CollisionSphere sphere : spheres) {
+			sphere.display(gl);
 		}
 
 		prog.useProgram(gl, false);
