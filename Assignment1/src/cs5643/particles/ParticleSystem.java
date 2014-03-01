@@ -63,7 +63,9 @@ public class ParticleSystem //implements Serializable
 		planes.add(new CollisionPlane(-1,0,0,1,0,0,this));
 //		planes.add(new CollisionPlane(0,-1,0,0,1,0,this));
 		planes.add(new CollisionPlane(0,0,-1,0,0,1,this));
-		spheres.add(new CollisionSphere(new Point3d(.5,.5,.5), this));
+		spheres.add(new CollisionSphere(new Point3d(.2,.3,.2), this));
+		spheres.add(new CollisionSphere(new Point3d(.4,.6,.4), this));
+		spheres.add(new CollisionSphere(new Point3d(.3,.9,.3), this));
 	}
 
 	/** 
@@ -159,7 +161,7 @@ public class ParticleSystem //implements Serializable
 			force.applyForce();
 		}
 		for(Force plane : planes) {
-			plane.applyForce();
+//			plane.applyForce();
 		}
 		for(Force sphere : spheres) {
 //			sphere.applyForce();
@@ -225,7 +227,6 @@ public class ParticleSystem //implements Serializable
 				for (CollisionSphere sphere : spheres) {
 					temp_pt.set(p.x_star);
 					temp_pt.add(p.delta_density);
-					System.out.println(temp_pt);
 					if (sphere.detectCollision(temp_pt)) {
 						sphere.addToMinCorrection(p.delta_collision, temp_pt);
 					}

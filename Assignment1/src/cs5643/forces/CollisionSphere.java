@@ -67,7 +67,6 @@ public class CollisionSphere implements Force {
 		normal.set(target);
 		normal.sub(center);
 		double diff = SPHERE_RADIUS - normal.length();
-		System.out.println("DIFF LENGTH: " + diff);
 		if (diff > 0) {
 			normal.normalize();
 			normal.scale(diff);
