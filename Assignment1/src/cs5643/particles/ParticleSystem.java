@@ -63,7 +63,6 @@ public class ParticleSystem //implements Serializable
 		planes.add(new CollisionPlane(-1,0,0,1,0,0,this));
 //		planes.add(new CollisionPlane(0,-1,0,0,1,0,this));
 		planes.add(new CollisionPlane(0,0,-1,0,0,1,this));
-		spheres.add(new CollisionSphere(new Point3d(.5,.5,.5), this));
 	}
 
 	/** 
@@ -109,6 +108,16 @@ public class ParticleSystem //implements Serializable
 		density_cs.add(dc);
 		return newP;
 	}
+	
+	/** Creates a sphere and adds it to the particle system.
+	 * @param center - point of the center of the sphere
+	 * @return Reference to the new sphere
+	 */
+	public CollisionSphere createBullet(Point3d center, Vector3d v) {
+		CollisionSphere newS = new CollisionSphere(center, v, this);
+		spheres.add(newS);
+		return newS;
+	}
 
 	/** 
 	 * Helper-function that computes nearest particle to the specified
@@ -151,6 +160,10 @@ public class ParticleSystem //implements Serializable
 	 */
 	public synchronized void advanceTime(double dt)
 	{
+		// Move colliding spheres
+		for (CollisionSphere sphere : spheres) {
+			sphere.updatePos(dt);
+		}
 		/// Clear force accumulators:
 		for(Particle p : P)  p.f.set(0,0,0);
 
@@ -225,7 +238,6 @@ public class ParticleSystem //implements Serializable
 				for (CollisionSphere sphere : spheres) {
 					temp_pt.set(p.x_star);
 					temp_pt.add(p.delta_density);
-					System.out.println(temp_pt);
 					if (sphere.detectCollision(temp_pt)) {
 						sphere.addToMinCorrection(p.delta_collision, temp_pt);
 					}

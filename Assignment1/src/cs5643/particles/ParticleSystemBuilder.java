@@ -13,6 +13,7 @@ import javax.media.opengl.glu.*;
 import com.jogamp.opengl.util.*;
 
 import cs5643.forces.GravityForce;
+import cs5643.forces.CollisionSphere;
 
 /**
  * CS5643: Assignment #1: Smoothed-Particle Hydrodynamics
@@ -224,6 +225,7 @@ public class ParticleSystemBuilder implements GLEventListener
 			AbstractButton[] buttons      = { new JButton("Reset"),
 					new JButton("Load File"),
 					new JToggleButton ("Create Particle", false), 
+					new JToggleButton ("Create Bullet", false),
 					new JToggleButton ("[Some Other Task]", false),
 			};
 
@@ -303,6 +305,9 @@ public class ParticleSystemBuilder implements GLEventListener
 				}
 				else if(cmd.equals("Create Particle")){
 					task = new CreateParticleTask();
+				}
+				else if(cmd.equals("Create Bullet")) {
+					task = new CreateBulletTask();
 				}
 				else if(cmd.equals("Load File")){
 					loadFrameFromFile();
@@ -434,6 +439,22 @@ public class ParticleSystemBuilder implements GLEventListener
 			}
 			void reset() {
 				taskSelector.resetToRest(); //sets task=null;
+			}
+		}
+		
+		class CreateBulletTask extends Task
+		{
+			public void mousePressed (MouseEvent e) {
+				Point3d center = new Point3d();
+				center.set(eyePos);
+				Vector3d v = new Vector3d();
+				v.set(targetPos);
+				v.sub(eyePos);
+				CollisionSphere lastCreatedBullet = PS.createBullet(center, v);
+			}
+			
+			void reset() {
+				taskSelector.resetToRest();
 			}
 		}
 

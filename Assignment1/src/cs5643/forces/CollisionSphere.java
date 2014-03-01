@@ -31,15 +31,17 @@ public class CollisionSphere implements Force {
 
 	private ParticleSystem ps;
 
-	public CollisionSphere(Point3d center, ParticleSystem p) {
+	public CollisionSphere(Point3d center, Vector3d v, ParticleSystem p) {
 		this.center.set(center);
+		this.v = v;
 		ps = p;
 	}
 
-	public CollisionSphere(double x, double y, double z, ParticleSystem p) {
+	public CollisionSphere(double x, double y, double z, Vector3d v, ParticleSystem p) {
 		this.center.setX(x);
 		this.center.setY(y);
 		this.center.setZ(z);
+		this.v = v;
 		ps = p;
 	}
 
@@ -67,7 +69,6 @@ public class CollisionSphere implements Force {
 		normal.set(target);
 		normal.sub(center);
 		double diff = SPHERE_RADIUS - normal.length();
-		System.out.println("DIFF LENGTH: " + diff);
 		if (diff > 0) {
 			normal.normalize();
 			normal.scale(diff);
@@ -88,6 +89,12 @@ public class CollisionSphere implements Force {
 				particle.accumulateForce(temp.x, temp.y, temp.z);
 			}
 		}
+	}
+	
+	public void updatePos(double dt) {
+		temp.set(v);
+		temp.scale(dt);
+		center.add(temp);
 	}
 
 	@Override
