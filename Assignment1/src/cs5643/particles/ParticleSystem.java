@@ -9,6 +9,7 @@ import com.jogamp.opengl.util.glsl.*;
 
 import cs5643.forces.CollisionPlane;
 import cs5643.forces.CollisionSphere;
+import cs5643.forces.GravityForce;
 
 /**
  * Maintains dynamic lists of Particle and Force objects, and provides
@@ -25,14 +26,21 @@ public class ParticleSystem //implements Serializable
 	/** List of Particle objects. */
 	public ArrayList<Particle>   P = new ArrayList<Particle>();
 
+	public ArrayList<Particle> particlesToRemove = new ArrayList<Particle>();
+	
 	/** List of Force objects. */
 	public ArrayList<Force>      F = new ArrayList<Force>();
 
+	public Point3d origin = new Point3d(0,0,0);
+	
 	public ArrayList<CollisionPlane> planes = new ArrayList<CollisionPlane>();
 	
+	public ArrayList<CollisionSphere> spheresToRemove = new ArrayList<CollisionSphere>();
 	public ArrayList<CollisionSphere> spheres = new ArrayList<CollisionSphere>();
-
-	public ArrayList<DensityConstraint> density_cs = new ArrayList<DensityConstraint>();
+	
+	public boolean raining = false;
+	
+	private Random random = new Random();
 
 	/** 
 	 * true iff prog has been initialized. This cannot be done in the
@@ -54,15 +62,99 @@ public class ParticleSystem //implements Serializable
 	private Point3d temp_pt = new Point3d();
 
 	private SpaceMap space_map = new SpaceMap();
+	
+	private CollisionPlane roof;
+	private boolean roof_active;
+	private CollisionPlane x_side;
+	private CollisionPlane floor;
+	private CollisionPlane slanted_floor;
+	
+	private GravityForce gravity;
 
 	/** Basic constructor. */
 	public ParticleSystem() {
-		planes.add(new CollisionPlane(1,0,0,0,0,0,this));
-		planes.add(new CollisionPlane(0,1,0,0,0,0,this));
-		planes.add(new CollisionPlane(0,0,1,0,0,0,this));
-		planes.add(new CollisionPlane(-1,0,0,1,0,0,this));
-//		planes.add(new CollisionPlane(0,-1,0,0,1,0,this));
-		planes.add(new CollisionPlane(0,0,-1,0,0,1,this));
+		gravity = new GravityForce(0, -9.8, 0, this);
+		F.add(gravity);
+		
+		roof = new CollisionPlane(0,-1,0,0.5,1,0.5,this);
+		x_side = new CollisionPlane(1,0,0,0,0.5,0.5,this);
+		planes.add(x_side);
+		floor = new CollisionPlane(0,1,0,0.5,0,0.5,this);
+		slanted_floor = new CollisionPlane(-0.25,1,0,0.5,0,0.5,this);
+		planes.add(floor);
+		planes.add(new CollisionPlane(0,0,1,0.5,0.5,0,this));
+		planes.add(new CollisionPlane(-1,0,0,1,0.5,0.5,this));
+//		planes.add(roof);
+		planes.add(new CollisionPlane(0,0,-1,0.5,0.5,1,this));
+		roof_active = false;
+	}
+	
+	public void setGravity(Vector3d dir) {
+		dir.normalize();
+		dir.scale(9.8);
+		gravity.setForce(dir.x, dir.y, dir.z);
+	}
+	
+	public void resetGravity() {
+		gravity.setForce(0, -9.8, 0);
+	}
+	
+	/**
+	 * Turns on or off the roof of the cell.
+	 */
+	public void toggleRoof() {
+		if(roof_active) {
+			planes.remove(roof);
+			roof_active = false;
+		}
+		else {
+			planes.add(roof);
+			roof_active = true;
+			for(Particle p : P) {
+				if(p.x.y > 1) {
+					particlesToRemove.add(p);
+				}
+			}
+			for(Particle p : particlesToRemove) {
+				P.remove(p);
+			}
+			particlesToRemove.clear();
+		}
+	}
+	
+	/**
+	 * Toggles on or off the wall in the x-direction of the cell.
+	 */
+	public void toggleWall() {
+		if(planes.contains(x_side)) {
+			planes.remove(x_side);
+		}
+		else {
+			planes.add(x_side);
+			for(Particle p : P) {
+				if(p.x.x < 0) {
+					particlesToRemove.add(p);
+				}
+			}
+			for(Particle p : particlesToRemove) {
+				P.remove(p);
+			}
+			particlesToRemove.clear();
+		}
+	}
+	
+	/**
+	 * Switches the floor between being slanted and being level.
+	 */
+	public void toggleFloor(){
+		if(planes.contains(floor)) {
+			planes.remove(floor);
+			planes.add(slanted_floor);
+		}
+		else {
+			planes.remove(slanted_floor);
+			planes.add(floor);
+		}
 	}
 
 	/** 
@@ -104,9 +196,18 @@ public class ParticleSystem //implements Serializable
 	{
 		Particle newP = new Particle(p0);
 		P.add(newP);
-		DensityConstraint dc = new DensityConstraint(newP);
-		density_cs.add(dc);
 		return newP;
+	}
+	
+	/**
+	 * Creates a particle at a random location.
+	 * 
+	 * @return
+	 */
+	public synchronized Particle addRandomParticle() {
+		Point3d x0 = new Point3d(random.nextFloat(),random.nextFloat(),random.nextFloat());
+		Particle p = createParticle(x0);
+		return p;
 	}
 	
 	/** Creates a sphere and adds it to the particle system.
@@ -151,31 +252,35 @@ public class ParticleSystem //implements Serializable
 			p.delta_density.set(0,0,0);
 			p.setHighlight(false);
 		}
+		spheres.clear();
 		time = 0;
 	}
 
 	/**
-	 * Incomplete/Debugging implementation of Forward-Euler
-	 * step. WARNING: Contains buggy debugging forces.
+	 * Implementation of one time step as described in "Position-Based Fluids"
 	 */
 	public synchronized void advanceTime(double dt)
 	{
 		// Move colliding spheres
 		for (CollisionSphere sphere : spheres) {
-			sphere.updatePos(dt);
+			if(sphere.getPos().distanceSquared(origin) > 10000) {
+				spheresToRemove.add(sphere);
+			}
+			else {
+				sphere.updatePos(dt);
+			}
 		}
+		for (CollisionSphere sphere : spheresToRemove) {
+			spheres.remove(sphere);
+		}
+		spheresToRemove.clear();
+		
 		/// Clear force accumulators:
 		for(Particle p : P)  p.f.set(0,0,0);
 
 		// Accumulate external forces.
 		for(Force force : F) {
 			force.applyForce();
-		}
-		for(Force plane : planes) {
-//			plane.applyForce();
-		}
-		for(Force sphere : spheres) {
-//			sphere.applyForce();
 		}
 
 		/// TIME-STEP: (Forward Euler for now):
@@ -198,9 +303,9 @@ public class ParticleSystem //implements Serializable
 		for (int n = 0; n < Constants.NUM_CORRECTION_ITERATIONS; n++) {
 
 			
-			// Compute all lambda_i
-			for (DensityConstraint dc : density_cs) {
-				dc.compute_lambda();
+			// Compute all lambda_i from density constraints
+			for (Particle i : P) {
+				i.dc.compute_lambda();
 			}
 			
 			// Compute all position corrections delta_pi
@@ -243,14 +348,14 @@ public class ParticleSystem //implements Serializable
 					}
 				}
 			}
-
+			// Add corrections
 			for (Particle p : P) {
 				p.x_star.add(p.delta_density);
 				p.x_star.add(p.delta_collision);
 			}
 		}
 
-
+		// Update velocity
 		for(Particle p : P) {
 			p.temp.set(p.x_star);
 			p.temp.sub(p.x);
@@ -286,10 +391,21 @@ public class ParticleSystem //implements Serializable
 		// Finalize prediction
 		for(Particle p : P) {
 			p.x.set(p.x_star);
+			// Remove any particles that are too far away.
+			if(Math.abs(p.x.y) > 20 || Math.abs(p.x.x) > 20 || Math.abs(p.x.z) > 20) {
+				particlesToRemove.add(p);
+			}
 		}
+		for(Particle p : particlesToRemove) {
+			P.remove(p);
+		}
+		particlesToRemove.clear();
 
 		time += dt;
-//		System.out.println("step complete: time " + time);
+		if(!roof_active && raining) {
+			Particle p = addRandomParticle();
+			p.x.y += 3;
+		}
 	}
 
 	/**
@@ -299,6 +415,9 @@ public class ParticleSystem //implements Serializable
 	{
 		for(Force force : F) {
 			force.display(gl);
+		}
+		for(Force plane : planes) {
+			plane.display(gl);
 		}
 
 		if(!init) init(gl);

@@ -83,6 +83,10 @@ public class CollisionPlane implements Force {
 		result.add(temp);
 	}
 
+	/**
+	 * Implements the normal force to this plane in case it is desired.
+	 * Currently unused.
+	 */
 	@Override
 	public void applyForce() {
 		for(Particle particle : ps.P) {
@@ -99,9 +103,19 @@ public class CollisionPlane implements Force {
 		
 	}
 
+	/**
+	 * Displays the normal vector to this plane as a line segment
+	 * extending out from the point on the plane.
+	 */
 	@Override
 	public void display(GL2 gl) {
-		// TODO Auto-generated method stub
+		gl.glBegin(GL2.GL_LINE_STRIP);
+		temp.set(normal);
+		temp.scale(0.2);
+		temp.add(pointOnPlane);
+		gl.glVertex3d(pointOnPlane.x, pointOnPlane.y, pointOnPlane.z);
+		gl.glVertex3d(temp.x, temp.y, temp.z);
+		gl.glEnd();
 		
 	}
 
@@ -110,6 +124,12 @@ public class CollisionPlane implements Force {
 		return ps;
 	}
 	
+	/**
+	 * Implements elastic collisions in case they are desired.
+	 * Currently unused.
+	 * 
+	 * @param p
+	 */
 	public void reflect(Particle p) {
 		temp.set(p.v);
 		double Nx = normal.dot(temp);
@@ -118,7 +138,4 @@ public class CollisionPlane implements Force {
 		temp.scale(Constants.ELASTICITY_R);
 		p.v.sub(temp);
 	}
-	
-	
-
 }

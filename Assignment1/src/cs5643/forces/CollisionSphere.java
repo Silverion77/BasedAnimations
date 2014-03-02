@@ -6,7 +6,6 @@ import javax.media.opengl.glu.GLUquadric;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
-import cs5643.particles.Constants;
 import cs5643.particles.Force;
 import cs5643.particles.Particle;
 import cs5643.particles.ParticleSystem;
@@ -119,7 +118,7 @@ public class CollisionSphere implements Force {
 		}
 
 		/// COLOR: DEFAULT CYAN; GREEN IF HIGHLIGHTED
-		float[] c = {1f, 0.7f, .3f, 1f};//default: cyan
+		float[] c = {1f, 0.2f, 0.2f, 1f};//default: cyan
 
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, c, 0); // Color used by shader
 

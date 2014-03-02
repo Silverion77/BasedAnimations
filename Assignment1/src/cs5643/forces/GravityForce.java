@@ -5,20 +5,27 @@ import javax.media.opengl.GL2;
 import cs5643.particles.Force;
 import cs5643.particles.Particle;
 import cs5643.particles.ParticleSystem;
-import cs5643.particles.ParticleSystemBuilder;
 
 public class GravityForce implements Force {
 	
 	private ParticleSystem ps;
+	private double x,y,z;
 	
-	public GravityForce(ParticleSystem p) {
+	public GravityForce(double x, double y, double z, ParticleSystem p) {
+		this.setForce(x,y,z);
 		ps = p;
+	}
+	
+	public void setForce(double x, double y, double z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
 	}
 
 	@Override
 	public void applyForce() {
 		for (Particle particle : ps.P) {
-			particle.accumulateForce(0f, -9.8f, 0f);
+			particle.accumulateForce(x,y,z);
 		}
 	}
 

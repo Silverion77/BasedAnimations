@@ -1,6 +1,5 @@
 package cs5643.particles;
 
-import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -62,7 +61,6 @@ public class ParticleSystemBuilder implements GLEventListener
 	ParticleSystemBuilder() 
 	{
 		PS = new ParticleSystem();
-		PS.addForce(new GravityForce(PS));
 	}
 
 	/**
@@ -178,7 +176,7 @@ public class ParticleSystemBuilder implements GLEventListener
 		glu.gluLookAt(eyePos.x, eyePos.y, eyePos.z, targetPos.x, targetPos.y, targetPos.z, 0, 1, 0);
 
 		/// DRAW COMPUTATIONAL CELL BOUNDARY:
-		gl.glColor3f(1, 0, 0);
+		gl.glColor3f(0.4f, 0.8f, 0.4f);
 		gl.glBegin(GL2.GL_LINE_LOOP);
 		gl.glVertex3d(0, 0, 0);   gl.glVertex3d(1, 0, 0);   gl.glVertex3d(1, 1, 0);  gl.glVertex3d(0, 1, 0);
 		gl.glEnd();
@@ -226,7 +224,12 @@ public class ParticleSystemBuilder implements GLEventListener
 					new JButton("Load File"),
 					new JToggleButton ("Create Particle", false), 
 					new JToggleButton ("Create Bullet", false),
-					new JToggleButton ("[Some Other Task]", false),
+					new JButton("Add Roof"),
+					new JButton("Remove Wall"),
+					new JButton("Slant Floor"),
+					new JButton ("Make it Rain"),
+					new JToggleButton ("Alter Gravity", false),
+					new JButton("Reset Gravity")
 			};
 
 			for(int i=0; i<buttons.length; i++) {
@@ -246,19 +249,13 @@ public class ParticleSystemBuilder implements GLEventListener
 		 * adornments. */
 		void simulateAndDisplayScene(GL2 gl)
 		{
-			/// TODO: OVERRIDE THIS INTEGRATOR (Doesn't use Force objects properly)
 			if(simulate) {
-				if(false) {//ONE EULER STEP
-					PS.advanceTime(DT);
+				//MULTIPLE STEPS FOR STABILITY WITH FORWARD EULER (UGH!)
+				int nSteps = N_STEPS_PER_FRAME;
+				double dt  = DT/(double)nSteps;
+				for(int k=0; k<nSteps; k++) {
+					PS.advanceTime(dt);
 				}
-				else {//MULTIPLE STEPS FOR STABILITY WITH FORWARD EULER (UGH!)
-					int nSteps = N_STEPS_PER_FRAME;
-					double dt  = DT/(double)nSteps;
-					for(int k=0; k<nSteps; k++) {
-						PS.advanceTime(dt);
-					}
-				}
-
 			}
 
 			// Draw particles, forces, etc.
@@ -312,12 +309,49 @@ public class ParticleSystemBuilder implements GLEventListener
 				else if(cmd.equals("Load File")){
 					loadFrameFromFile();
 				}
+				else if(cmd.equals("Remove Roof")) {
+					JButton b = (JButton)e.getSource();
+					b.setText("Add Roof");
+					PS.toggleRoof();
+				}
+				else if(cmd.equals("Add Roof")) {
+					JButton b = (JButton)e.getSource();
+					b.setText("Remove Roof");
+					PS.toggleRoof();
+				}
+				else if(cmd.equals("Remove Wall")) {
+					JButton b = (JButton)e.getSource();
+					b.setText("Add Wall");
+					PS.toggleWall();
+				}
+				else if(cmd.equals("Add Wall")) {
+					JButton b = (JButton)e.getSource();
+					b.setText("Remove Wall");
+					PS.toggleWall();
+				}
+				else if(cmd.equals("Slant Floor")) {
+					JButton b = (JButton)e.getSource();
+					b.setText("Level Floor");
+					PS.toggleFloor();
+				}
+				else if(cmd.equals("Level Floor")) {
+					JButton b = (JButton)e.getSource();
+					b.setText("Slant Floor");
+					PS.toggleFloor();
+				}
+				else if(cmd.equals("Make it Rain")) {
+					PS.raining = !PS.raining;
+				}
+				else if(cmd.equals("Alter Gravity")) {
+					task = new AlterGravityTask();
+				}
+				else if(cmd.equals("Reset Gravity")) {
+					PS.resetGravity();
+				}
 				else {
 					System.out.println("UNHANDLED ActionEvent: "+e);
 				}
 			}
-
-
 		}
 
 		// Methods required for the implementation of MouseListener
@@ -356,10 +390,10 @@ public class ParticleSystemBuilder implements GLEventListener
 				taskSelector.resetToRest(); //sets task=null;
 				break;
 			case KeyEvent.VK_E:
-				// TODO(Optional): Uncomment to make the frameExporter write images instead of text files
-				// frameExporter = ((frameExporter==null) ? (new FrameExporter(true)) : null);
+				// Uncomment to make the frameExporter write images instead of text files
+				frameExporter = ((frameExporter==null) ? (new FrameExporter(true)) : null);
 
-				frameExporter = ((frameExporter==null) ? (new FrameExporter()) : null);
+//				frameExporter = ((frameExporter==null) ? (new FrameExporter()) : null);
 				System.out.println("'e' : frameExporter = "+frameExporter);
 				break;
 			case KeyEvent.VK_L:
@@ -385,14 +419,13 @@ public class ParticleSystemBuilder implements GLEventListener
 				eyePos.z = -vec.x*Constants.CAM_SIN_THETA + vec.y*Constants.CAM_COS_THETA + targetPos.z;
 				break;
 
-				// TODO(Optional): Make the camera orbit rather than translate?
 			case KeyEvent.VK_UP:
 				eyePos.y += 1;
 				break;
 			case KeyEvent.VK_DOWN:
 				eyePos.y -= 1;
 				break;
-			
+
 			case KeyEvent.VK_W:
 				targetPos.y += 0.1;
 				break;
@@ -455,16 +488,13 @@ public class ParticleSystemBuilder implements GLEventListener
 		{
 
 			public void mousePressed (MouseEvent e) {
-				// TODO(Optional): get the mouse position instead of a random position
-				java.util.Random r = new java.util.Random();
-				Point3d x0 = new Point3d(r.nextFloat(),r.nextFloat(),r.nextFloat());
-				Particle lastCreatedParticle = PS.createParticle(x0);
+				PS.addRandomParticle();
 			}
 			void reset() {
 				taskSelector.resetToRest(); //sets task=null;
 			}
 		}
-		
+
 		class CreateBulletTask extends Task
 		{
 			public void mousePressed (MouseEvent e) {
@@ -473,7 +503,46 @@ public class ParticleSystemBuilder implements GLEventListener
 				Vector3d v = new Vector3d();
 				v.set(targetPos);
 				v.sub(eyePos);
-				CollisionSphere lastCreatedBullet = PS.createBullet(center, v);
+				PS.createBullet(center, v);
+			}
+
+			void reset() {
+				taskSelector.resetToRest();
+			}
+		}
+		
+		class AlterGravityTask extends Task {
+			
+			Vector3d forward = new Vector3d();
+			Vector3d up = new Vector3d();
+			Vector3d right = new Vector3d();
+			
+			Point pressed = null;
+			Point released = null;
+			
+			
+			public void mousePressed (MouseEvent e) {
+				pressed = e.getPoint();
+			}
+			public void mouseReleased (MouseEvent e) {
+				if(pressed != null) {
+					released = e.getPoint();
+					int amtRight = released.x - pressed.x;
+					int amtUp = pressed.y - released.y;
+					if(amtRight == 0 && amtUp == 0) return;
+					forward.set(targetPos);
+					forward.sub(eyePos);
+					forward.normalize();
+					up.set(0,1,0);
+					right.cross(forward, up);
+					right.normalize();
+					up.scale(amtUp);
+					right.scale(amtRight);
+					forward.set(0,0,0);
+					forward.add(up);
+					forward.add(right);
+					PS.setGravity(forward);
+				}
 			}
 			
 			void reset() {

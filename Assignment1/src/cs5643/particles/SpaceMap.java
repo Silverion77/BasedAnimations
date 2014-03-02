@@ -7,6 +7,8 @@ import java.util.List;
 /**
  * Hashes particles into buckets divided up by their location
  * in space. Each bucket represents a cubic section of the space.
+ * By accessing one bucket, we can get all particles in that
+ * section of the space.
  * 
  * @author Chris
  *
@@ -17,12 +19,19 @@ public class SpaceMap {
 	private List<Particle> tempList;
 	private IntTriple triple;
 	
+	/**
+	 * Constructs a new, empty SpaceMap.
+	 */
 	public SpaceMap() {
 		map = new HashMap<IntTriple, List<Particle>>();
 		triple = new IntTriple(0,0,0);
 		tempList = new ArrayList<Particle>();
 	}
 	
+	/**
+	 * Adds a particle to the map, hashing it to the correct location.
+	 * @param p The particle to add.
+	 */
 	public void addParticle(Particle p) {
 		triple.floorAll(p.x.x, p.x.y, p.x.z);
 		if(map.containsKey(triple)) {
@@ -36,6 +45,10 @@ public class SpaceMap {
 		}
 	}
 	
+	/**
+	 * Adds all the particles in the given list.
+	 * @param ps The particles to add.
+	 */
 	public void addAll(List<Particle> ps) {
 		for (Particle p : ps) {
 			addParticle(p);
@@ -74,6 +87,9 @@ public class SpaceMap {
 		}
 	}
 	
+	/**
+	 * Empties this map.
+	 */
 	public void clear() {
 		for(List<Particle> lst : map.values()) {
 			lst.clear();

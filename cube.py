@@ -1,1 +1,0 @@
-f = open('cube.txt', 'w')num_x = 4num_y = 50num_z = 4num_points = num_x * num_y * num_zf.write('%d\n' % num_points)step = 0.09for i in range(num_x):    for j in range(num_y):        for k in range(num_z):            x = i * step + step            y = j * step + step            z = k * step + step            f.write('%f %f %f\n' % (x,y,z))f.close()

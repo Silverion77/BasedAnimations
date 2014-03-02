@@ -62,6 +62,8 @@ public class Particle
 	 * Lagrange multiplier for solving density constraints
 	 */
 	double lambda_i;
+	
+	DensityConstraint dc;
 
 	public Point3d getPos() {
 		return x;
@@ -95,6 +97,7 @@ public class Particle
 		this.x0.set(x0);
 		x.set(x0);
 		x_star.set(x0);
+		dc = new DensityConstraint(this);
 	}
 
 	/** Draws spherical particle using a display list. */
@@ -157,10 +160,17 @@ public class Particle
 		viscosity.scale(Constants.VISCOSITY_C);
 	}
 	
+	/**
+	 * Applies the XSPH viscosity filter to this particle. Requires that
+	 * updateXSPHViscosity() was previously called.
+	 */
 	public void applyXSPHViscosity() {
 		v.add(viscosity);
 	}
 	
+	/**
+	 * Computes the omega term of the vorticity confinement equation.
+	 */
 	public void updateVorticityW() {
 		vorticity.set(0,0,0);
 		for(Particle j : neighbors) {
@@ -172,6 +182,10 @@ public class Particle
 		}
 	}
 	
+	/**
+	 * Computes the normal term of the vorticity confinement equation.
+	 * Requires that updateVorticityW() was already called.
+	 */
 	public void updateVorticityN() {
 		vort_normal.set(0,0,0);
 		double scalar = 0;
@@ -185,6 +199,10 @@ public class Particle
 		vort_normal.normalize();
 	}
 	
+	/**
+	 * Applies vorticity confinement to this particle. Requires that omega
+	 * and N were both previously computed.
+	 */
 	public void applyVorticity() {
 		temp.set(0,0,0);
 		temp.cross(vort_normal, vorticity);

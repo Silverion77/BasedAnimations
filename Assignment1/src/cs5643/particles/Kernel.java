@@ -28,6 +28,13 @@ public class Kernel {
 		return toRet;
 	}
 	
+	/**
+	 * Computes poly6(p_i - p_j).
+	 * 
+	 * @param i
+	 * @param j
+	 * @return
+	 */
 	public static double poly6(Particle i, Particle j) {
 		return poly6(i.x_star.distanceSquared(j.x_star));
 	}
