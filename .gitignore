@@ -1,6 +1,6 @@
 *.class
-Assignment1/bin
-Assignment1/.settings
+*/bin
+*/.settings
 .metadata
 
 # Package Files #
