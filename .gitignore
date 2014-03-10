@@ -1,7 +1,10 @@
 *.class
 */bin
 */.settings
+*/videos
+*.mp4
 .metadata
+*.zip
 
 # Package Files #
 *.jar

@@ -1,11 +1,10 @@
 package cs5643.particles;
 
 import java.util.*;
-
 import javax.vecmath.*;
 import javax.media.opengl.*;
-
 import com.jogamp.opengl.util.glsl.*;
+
 
 /**
  * Maintains dynamic lists of Particle and Force objects, and provides
@@ -21,7 +20,7 @@ public class ParticleSystem //implements Serializable
 
 	/** List of Particle objects. */
 	public ArrayList<Particle> particles = new ArrayList<Particle>();
-	
+
 	/** List of Force objects. */
 	public ArrayList<Force> forces = new ArrayList<Force>();
 
@@ -32,21 +31,17 @@ public class ParticleSystem //implements Serializable
 	private boolean init = false;
 
 	/** Filename of vertex shader source. */
-	public static final String[] VERT_SOURCE = {"vert.glsl"};
+	public static final String[] VERT_SOURCE = {"mesh-vert.glsl"};
 
 	/** Filename of fragment shader source. */
-	public static final String[] FRAG_SOURCE = {"frag.glsl"};
+	public static final String[] FRAG_SOURCE = {"mesh-frag.glsl"};
 
 	/** The shader program used by the particles. */
 	ShaderProgram prog;
 
-	/** Private vector for scratch work */
-	private Vector3d temp_vec = new Vector3d();
-	private Point3d temp_pt = new Point3d();
 
 	/** Basic constructor. */
-	public ParticleSystem() {
-	}
+	public ParticleSystem() {}
 
 	/** 
 	 * Set up the GLSL program. This requires that the current directory (i.e. the package in which
@@ -66,6 +61,17 @@ public class ParticleSystem //implements Serializable
 		}
 
 		init = true;
+	}
+
+	/** Adds a force object (until removed) */
+	public synchronized void addForce(Force f) {
+		forces.add(f);
+	}
+
+	/** Useful for removing temporary forces, such as user-interaction
+	 * spring forces. */
+	public synchronized void removeForce(Force f) {
+		forces.remove(f);
 	}
 
 	/** Creates particle and adds it to the particle system. 
@@ -107,19 +113,19 @@ public class ParticleSystem //implements Serializable
 			p.x.set(p.x0);
 			p.v.set(0,0,0);
 			p.f.set(0,0,0);
-			p.delta_collision.set(0,0,0);
-			p.delta_density.set(0,0,0);
 			p.setHighlight(false);
 		}
 		time = 0;
 	}
 
 	/**
-	 * Implementation of one time step as described in "Position-Based Fluids"
+	 * Advances the time by one increment. The integrator used here should
+	 * be stable.
 	 */
 	public synchronized void advanceTime(double dt)
 	{
-		// TODO: everything here
+		// TODO: write an integrator that is stable
+		time += dt;
 	}
 
 	/**

@@ -3,6 +3,15 @@ CS 5643 Assignment 1
 ====================
 Chris Yu (cy284) and Ari Karo (aak82)
 
+Videos (in videos/ directory):
+
+  - CANNONS.mp4: demo of shooting spheres
+  - floor_roof.mp4: demo of slanting floor and removeable roof
+  - gravity.mp4: demo of modifying gravity
+  - make_it_rain.mp4: demo of "rain", and removeable wall
+  - no_scorr_vs_scorr.mp4: comparison of simulation with no surface tension
+        (on left) vs with surface tension (on right)
+
 Summary:
 
 We implemented the position-based fluid simulator, using the formulas given in
