@@ -1,6 +1,8 @@
-package cs5643.particles;
+package cs5643.forces;
 
 import javax.media.opengl.*;
+
+import cs5643.particles.Particle;
 
 /**
  * Particle system force.

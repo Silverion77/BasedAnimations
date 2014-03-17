@@ -15,8 +15,8 @@ public interface Constants
     public static final double CAM_SIN_THETA     = Math.sin(0.1);
     public static final double CAM_COS_THETA     = Math.cos(0.1);
     
-   /** Number of iterations to run the inner loop (position corrections). */
-    public static final int NUM_CORRECTION_ITERATIONS = 2;
+   /** Number of iterations to run constraint projection */
+    public static final int NUM_SOLVER_ITERATIONS = 2;
     
     /** rho_0, the desired standing density of the fluid. */
     public static final double REST_DENSITY = 2300;

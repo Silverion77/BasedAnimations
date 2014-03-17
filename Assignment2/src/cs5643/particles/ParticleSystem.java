@@ -1,9 +1,13 @@
 package cs5643.particles;
 
 import java.util.*;
+
 import javax.vecmath.*;
 import javax.media.opengl.*;
+
 import com.jogamp.opengl.util.glsl.*;
+
+import cs5643.forces.Force;
 
 
 /**
@@ -17,6 +21,8 @@ public class ParticleSystem //implements Serializable
 {
 	/** Current simulation time. */
 	public double time = 0;
+	
+	public ArrayList<Mesh> meshes = new ArrayList<Mesh>();
 
 	/** List of Particle objects. */
 	public ArrayList<Particle> particles = new ArrayList<Particle>();
@@ -72,6 +78,10 @@ public class ParticleSystem //implements Serializable
 	 * spring forces. */
 	public synchronized void removeForce(Force f) {
 		forces.remove(f);
+	}
+	
+	public synchronized void addMesh(Mesh m) {
+		meshes.add(m);
 	}
 
 	/** Creates particle and adds it to the particle system. 
@@ -140,10 +150,14 @@ public class ParticleSystem //implements Serializable
 		if(!init) init(gl);
 
 		prog.useProgram(gl, true);
-
-		for(Particle particle : particles) {
-			particle.display(gl);
+		
+		for(Mesh mesh : meshes) {
+			mesh.display(gl);
 		}
+
+//		for(Particle particle : particles) {
+//			particle.display(gl);
+//		}
 
 		prog.useProgram(gl, false);
 	}

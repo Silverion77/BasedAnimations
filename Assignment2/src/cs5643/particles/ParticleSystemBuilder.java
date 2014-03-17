@@ -1,18 +1,20 @@
 package cs5643.particles;
 
 import java.util.*;
-
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 import javax.swing.*;
 import javax.vecmath.*;
-
 import javax.media.opengl.*;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.glu.*;
 
 import com.jogamp.opengl.util.*;
+
+import cs5643.particles.MeshBuilder.BadMeshException;
 
 /**
  * CS5643: Assignment #1: Smoothed-Particle Hydrodynamics
@@ -222,6 +224,7 @@ public class ParticleSystemBuilder implements GLEventListener
 			ButtonGroup      buttonGroup  = new ButtonGroup();
 			AbstractButton[] buttons      = { new JButton("Reset"),
 					new JButton("Load File"),
+					new JButton("Load Mesh"),
 					new JToggleButton ("Create Particle", false), 
 					new JToggleButton ("[Some Other Task]", false),
 			};
@@ -297,6 +300,9 @@ public class ParticleSystemBuilder implements GLEventListener
 				else if(cmd.equals("Load File")){
 					loadFrameFromFile();
 				}
+				else if(cmd.equals("Load Mesh")) {
+					loadMeshFromFile();
+				}
 				else {
 					System.out.println("UNHANDLED ActionEvent: "+e);
 				}
@@ -369,8 +375,6 @@ public class ParticleSystemBuilder implements GLEventListener
 				eyePos.x = vec.x*Constants.CAM_COS_THETA + vec.y*Constants.CAM_SIN_THETA + targetPos.x;
 				eyePos.z = -vec.x*Constants.CAM_SIN_THETA + vec.y*Constants.CAM_COS_THETA + targetPos.z;
 				break;
-
-				// TODO(Optional): Make the camera orbit rather than translate?
 			case KeyEvent.VK_UP:
 				eyePos.y += 1;
 				break;
@@ -465,6 +469,28 @@ public class ParticleSystemBuilder implements GLEventListener
 			System.err.println("OOPS: "+e);
 		}
 
+	}
+	
+	private void loadMeshFromFile()
+	{
+		JFileChooser fc = new JFileChooser("./mesh");
+		int choice = fc.showOpenDialog(frame);
+		if (choice != JFileChooser.APPROVE_OPTION) return;
+		String fileName = fc.getSelectedFile().getAbsolutePath();
+
+		java.io.File file = new java.io.File(fileName);
+		if (!file.exists()) {
+			System.err.println("Error: Tried to load a frame from a non-existant file.");
+			return;
+		}
+		
+		try {
+			Mesh m = MeshBuilder.buildMesh(new File(fileName), particleSystem);
+			particleSystem.addMesh(m);
+		} catch (FileNotFoundException | BadMeshException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/// Used by the FrameExporter class
