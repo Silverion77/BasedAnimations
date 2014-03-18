@@ -23,7 +23,7 @@ public interface Constants
     public static final int NUM_SOLVER_ITERATIONS = 2;
     
     /** Stiffness of cloth stretch constraint. */
-    public static final double K_STRETCH = .2;
+    public static final double K_STRETCH = 0.1;
     
     /** Stiffness of cloth bend constraint. */
     public static final double K_BEND = .2;

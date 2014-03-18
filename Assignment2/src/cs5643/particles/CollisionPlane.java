@@ -7,7 +7,6 @@ public class CollisionPlane {
 
 	private Vector3d normal;
 	private Point3d pointOnPlane;
-	private Vector3d temp;
 	
 	/**
 	 * Creates a plane with normal vector (a,b,c) that passes through
@@ -17,7 +16,6 @@ public class CollisionPlane {
 		normal = new Vector3d(a,b,c);
 		normal.normalize();
 		pointOnPlane = new Point3d(x_0, y_0, z_0);
-		temp = new Vector3d();
 	}
 	
 	public Vector3d getNormal() {

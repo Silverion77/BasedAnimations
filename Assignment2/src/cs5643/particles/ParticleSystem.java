@@ -70,6 +70,7 @@ public class ParticleSystem //implements Serializable
 		v_cm = new Vector3d();
 		angular = new Vector3d();
 		temp1 = new Vector3d();
+		temp2 = new Vector3d();
 		r_tilde = new Matrix3d();
 		r_tilde_T = new Matrix3d();
 		bigI = new Matrix3d();
@@ -116,6 +117,10 @@ public class ParticleSystem //implements Serializable
 	
 	public synchronized void addMesh(Mesh m) {
 		meshes.add(m);
+		for(Edge e : m.edges) {
+			StretchConstraint sc = new StretchConstraint(e.v0, e.v1);
+			cloth_constrs.add(sc);
+		}
 	}
 
 	/** Creates particle and adds it to the particle system. 
@@ -180,8 +185,9 @@ public class ParticleSystem //implements Serializable
 			Utils.acc(p_i.v, dt / p_i.m, p_i.f);
 		}
 		
-		for(Particle p_i : particles) {
-			p_i.dampVelocity();
+		for(Mesh m : meshes) {
+			// TODO: use rigid damping, too spooky to use right now
+			rigidDamp(m);
 		}
 		
 		for(Particle p_i : particles) {
@@ -232,9 +238,9 @@ public class ParticleSystem //implements Serializable
 			mesh.display(gl);
 		}
 
-//		for(Particle particle : particles) {
-//			particle.display(gl);
-//		}
+		for(Particle particle : particles) {
+			particle.display(gl);
+		}
 
 		prog.useProgram(gl, false);
 	}

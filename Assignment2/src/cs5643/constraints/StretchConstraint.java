@@ -2,6 +2,7 @@ package cs5643.constraints;
 
 import javax.vecmath.Vector3d;
 
+import cs5643.particles.Constants;
 import cs5643.particles.Particle;
 
 /**
@@ -23,7 +24,7 @@ public class StretchConstraint extends Constraint {
 	}
 	
 	public StretchConstraint(double l_0, Particle p1, Particle p2) {
-		this(l_0, p1, p2, 1); // TODO: replace this with k_stretch
+		this(l_0, p1, p2, Constants.K_STRETCH);
 	}
 	
 	/**
@@ -67,8 +68,8 @@ public class StretchConstraint extends Constraint {
 	@Override
 	public void project() {
 		double value = evaluate();
-		double w_ratio_1 = - p1.w() / (p1.w() + p2.w());
-		double w_ratio_2 = p2.w() / (p1.w() + p2.w());
+		double w_ratio_1 = p1.w() / (p1.w() + p2.w());
+		double w_ratio_2 = - p2.w() / (p1.w() + p2.w());
 		computeN();
 		temp.set(gradient_temp);
 		temp.scale(value * w_ratio_1 * stiffness_k);

@@ -1,7 +1,5 @@
 package cs5643.particles;
 
-import java.util.ArrayList;
-
 import javax.vecmath.*;
 import javax.media.opengl.*;
 import javax.media.opengl.glu.*;
@@ -104,9 +102,5 @@ public class Particle
 	/** True if particle should be drawn highlighted. */
 	public boolean getHighlight() { 
 		return highlight; 
-	}
-	
-	public void dampVelocity() {
-		// TODO: damp the velocity
 	}
 }

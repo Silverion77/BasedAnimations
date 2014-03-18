@@ -348,9 +348,9 @@ public class ParticleSystemBuilder implements GLEventListener
 				break;
 			case KeyEvent.VK_E:
 				// TODO(Optional): Uncomment to make the frameExporter write images instead of text files
-				// frameExporter = ((frameExporter==null) ? (new FrameExporter(true)) : null);
+				 frameExporter = ((frameExporter==null) ? (new FrameExporter(true)) : null);
 
-				frameExporter = ((frameExporter==null) ? (new FrameExporter()) : null);
+//				frameExporter = ((frameExporter==null) ? (new FrameExporter()) : null);
 				System.out.println("'e' : frameExporter = "+frameExporter);
 				break;
 			case KeyEvent.VK_L:
