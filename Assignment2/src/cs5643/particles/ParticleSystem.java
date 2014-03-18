@@ -7,8 +7,8 @@ import javax.media.opengl.*;
 
 import com.jogamp.opengl.util.glsl.*;
 
-import cs5643.forces.Force;
-
+import cs5643.constraints.*;
+import cs5643.forces.*;
 
 /**
  * Maintains dynamic lists of Particle and Force objects, and provides
@@ -20,15 +20,25 @@ import cs5643.forces.Force;
 public class ParticleSystem //implements Serializable
 {
 	/** Current simulation time. */
-	public double time = 0;
+	public double time;
 	
-	public ArrayList<Mesh> meshes = new ArrayList<Mesh>();
-
+	public ArrayList<Mesh> meshes;
+	
 	/** List of Particle objects. */
-	public ArrayList<Particle> particles = new ArrayList<Particle>();
-
+	public ArrayList<Particle> particles;
+	
 	/** List of Force objects. */
-	public ArrayList<Force> forces = new ArrayList<Force>();
+	public ArrayList<Force> forces;
+	
+	public ArrayList<Constraint> cloth_constrs;
+	
+	public ArrayList<Constraint> collision_constrs;
+	
+	private CollisionPlane floor;
+	
+	private Vector3d x_cm, v_cm, angular;
+	private Vector3d temp1, temp2;
+	private Matrix3d r_tilde, r_tilde_T, bigI;
 
 	/** 
 	 * true iff prog has been initialized. This cannot be done in the
@@ -45,9 +55,27 @@ public class ParticleSystem //implements Serializable
 	/** The shader program used by the particles. */
 	ShaderProgram prog;
 
-
 	/** Basic constructor. */
-	public ParticleSystem() {}
+	public ParticleSystem() {
+		time = 0;
+		meshes = new ArrayList<Mesh>();
+		particles = new ArrayList<Particle>();
+		forces = new ArrayList<Force>();
+		cloth_constrs = new ArrayList<Constraint>();
+		collision_constrs = new ArrayList<Constraint>();
+		
+		floor = new CollisionPlane(0,1,0,0,0,0);
+		
+		x_cm = new Vector3d();
+		v_cm = new Vector3d();
+		angular = new Vector3d();
+		temp1 = new Vector3d();
+		r_tilde = new Matrix3d();
+		r_tilde_T = new Matrix3d();
+		bigI = new Matrix3d();
+		
+		forces.add(new Gravity());
+	}
 
 	/** 
 	 * Set up the GLSL program. This requires that the current directory (i.e. the package in which
@@ -73,6 +101,12 @@ public class ParticleSystem //implements Serializable
 	public synchronized void addForce(Force f) {
 		forces.add(f);
 	}
+	
+	public synchronized void addParticle(Particle p) {
+		particles.add(p);
+		// TODO: get rid of this
+		collision_constrs.add(new PlaneConstraint(p, floor));
+	}
 
 	/** Useful for removing temporary forces, such as user-interaction
 	 * spring forces. */
@@ -91,7 +125,7 @@ public class ParticleSystem //implements Serializable
 	public synchronized Particle createParticle(Point3d p0) 
 	{
 		Particle newP = new Particle(p0);
-		particles.add(newP);
+		addParticle(newP);
 		return newP;
 	}
 
@@ -121,6 +155,7 @@ public class ParticleSystem //implements Serializable
 	{
 		for(Particle p : particles)  {
 			p.x.set(p.x0);
+			p.x_star.set(p.x0);
 			p.v.set(0,0,0);
 			p.f.set(0,0,0);
 			p.setHighlight(false);
@@ -134,7 +169,49 @@ public class ParticleSystem //implements Serializable
 	 */
 	public synchronized void advanceTime(double dt)
 	{
-		// TODO: write an integrator that is stable
+		// Accumulate all external forces f_ext
+		for(Particle p_i : particles) {
+			for(Force f : forces) {
+				f.applyForce(p_i);
+			}
+		}
+		
+		for(Particle p_i : particles) {
+			Utils.acc(p_i.v, dt / p_i.m, p_i.f);
+		}
+		
+		for(Particle p_i : particles) {
+			p_i.dampVelocity();
+		}
+		
+		for(Particle p_i : particles) {
+			Utils.acc(p_i.x_star, dt, p_i.v);
+		}
+		
+		// TODO: generate collision constraints
+		
+		for(int count = 0; count < Constants.NUM_SOLVER_ITERATIONS; count++) {
+			// Project the constraints
+			for(Constraint c : cloth_constrs) {
+				c.project();
+			}
+			for(Constraint c : collision_constrs) {
+				c.project();
+			}
+		}
+		
+		for(Particle p_i : particles) {
+			// update velocity: v_i <- (p_i - x_i) / dt
+			p_i.v.set(p_i.x_star);
+			p_i.v.sub(p_i.x);
+			p_i.v.scale(1.0 / dt);
+			// finalize prediction: x_i <- p_i
+			p_i.x.set(p_i.x_star);
+		}
+		
+		// TODO: "the velocities of colliding vertices are modified according
+		// to friction and restitution coefficients"
+		
 		time += dt;
 	}
 
@@ -161,5 +238,73 @@ public class ParticleSystem //implements Serializable
 
 		prog.useProgram(gl, false);
 	}
+	
+	/**
+	 * Performs rigid damping on all vertices of the given mesh.
+	 * @param m
+	 */
+	private void rigidDamp(Mesh m) {
+		double sum_masses = 0;
+		x_cm.set(0,0,0);
+		v_cm.set(0,0,0);
+		for(Particle p : m.vertices) {
+			Utils.acc(x_cm, p.m, p.x_star);
+			Utils.acc(v_cm, p.m, p.v);
+			sum_masses += p.m;
+		}
+		x_cm.scale(1.0 / sum_masses);
+		v_cm.scale(1.0 / sum_masses);
+		
+		// currently, angular holds L
+		angular.set(0,0,0);
+		bigI.setZero();
+		
+		for(Particle p : m.vertices) {
+			// Compute r_i
+			temp1.set(p.x_star);
+			temp1.sub(x_cm);
+			
+			// While we're at it, compute r_tilde
+			r_tilde.setZero();
+			r_tilde.setRow(0, 0, -temp1.z, temp1.y);
+			r_tilde.setRow(1, temp1.z, 0, -temp1.x);
+			r_tilde.setRow(2, -temp1.y, temp1.x, 0);
+			r_tilde_T.set(r_tilde);
+			r_tilde_T.transpose();
+			r_tilde.mul(r_tilde_T);
+			r_tilde.mul(p.m);
+			bigI.add(r_tilde);
+			
+			// Compute m_i * v_i
+			temp2.set(p.v);
+			temp2.scale(p.m);
+			
+			// Compute r_i x (m_i * v_i)
+			temp1.cross(temp1, temp2);
+			
+			angular.add(temp1);
+		}
+		// At this point, have L and I.
+		bigI.invert();
+		bigI.transform(angular);
+		
+		// angular now holds w, the angular momentum
+		for(Particle p : particles) {
+			// temp2 = r_i
+			temp2.set(p.x_star);
+			temp2.sub(x_cm);
+			// temp1 = delta v_i = v_cm + (w x r_i) - v_i
+			temp1.set(angular);
+			temp1.cross(temp1, temp2);
+			temp1.add(v_cm);
+			temp1.sub(p.v);
+			Utils.acc(p.v, Constants.K_DAMPING, temp1);
+		}
+	}
+	
+	
+	
+	
+	
 
 }

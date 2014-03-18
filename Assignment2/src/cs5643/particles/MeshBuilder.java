@@ -55,7 +55,7 @@ public class MeshBuilder {
 				x0.y = Double.parseDouble(tokens[2]);
 				x0.z = Double.parseDouble(tokens[3]);
 				Vertex p = new Vertex(x0);
-				ps.particles.add(p);
+				ps.addParticle(p);
 				result.vertices.add(p);
 
 			} else if(tokens[0].equals("f")) {

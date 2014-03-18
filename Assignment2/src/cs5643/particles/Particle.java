@@ -23,8 +23,8 @@ public class Particle
 	/** Highlighted appearance if true, otherwise white. */
 	private boolean highlight = false;
 
-	/** Default mass. */
-//	double   m = Constants.PARTICLE_MASS;
+	/** Default inverse mass. */
+	public double m = 1;
 
 	/** Deformed Position. */
 	public Point3d  x = new Point3d();
@@ -39,35 +39,13 @@ public class Particle
 	public Vector3d v = new Vector3d();
 
 	/** Force accumulator. */
-	Vector3d f = new Vector3d();
-	
-	double density = 0;
-	
-	Vector3d delta_density = new Vector3d();
-	Vector3d delta_collision = new Vector3d();
-	
-	Point3d x_star_plus_delta = new Point3d();
-	
-	ArrayList<Particle> neighbors = new ArrayList<Particle>();
+	public Vector3d f = new Vector3d();
 	
 	/** For scratch work. */
 	Vector3d temp = new Vector3d();
-
-	public Point3d getPos() {
-		return x;
-	}
 	
-	public Point3d getCollisionPos() {
-		x_star_plus_delta.set(x_star);
-		x_star_plus_delta.add(delta_density);
-		return x_star_plus_delta;
-	}
-	
-	public Vector3d getVel() {
-		return v;
-	}
-	public Vector3d getForce() {
-		return f;
+	public double w() {
+		return 1.0 / m;
 	}
 	
 	public void accumulateForce(double x, double y, double z) {
@@ -126,5 +104,9 @@ public class Particle
 	/** True if particle should be drawn highlighted. */
 	public boolean getHighlight() { 
 		return highlight; 
+	}
+	
+	public void dampVelocity() {
+		// TODO: damp the velocity
 	}
 }

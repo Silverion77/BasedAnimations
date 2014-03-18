@@ -8,7 +8,7 @@ public class Gravity implements Force {
 
 	@Override
 	public void applyForce(Particle p) {
-		p.accumulateForce(0, -9.8f, 0);
+		p.accumulateForce(0, -9.8 * p.m, 0);
 	}
 
 	@Override

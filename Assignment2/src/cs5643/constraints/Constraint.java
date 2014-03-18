@@ -18,7 +18,7 @@ import cs5643.particles.Particle;
  */
 public abstract class Constraint {
 	
-	private double stiffness_k;
+	protected double stiffness_k;
 	
 	/**
 	 * Creates a constraint with stiffness k.
