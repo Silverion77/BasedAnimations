@@ -63,7 +63,7 @@ public class BendConstraint extends Constraint {
 			Iterator<Particle> j = vertices_t2.iterator();
 			while (j.hasNext()) {
 				Particle tmp2 = j.next();
-				if (p1 == p2) {
+				if (tmp1 == tmp2) {
 					count++;
 					if (count == 1)
 						p1 = tmp1;
