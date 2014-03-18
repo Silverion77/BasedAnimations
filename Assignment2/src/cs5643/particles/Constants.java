@@ -5,6 +5,7 @@ package cs5643.particles;
  * 
  * @author Doug James, January 2007
  * @author Eston Schweickart, February 2014
+ * @author Ari Karo, March 2014
  */
 public interface Constants
 {
@@ -15,24 +16,16 @@ public interface Constants
     public static final double CAM_SIN_THETA     = Math.sin(0.1);
     public static final double CAM_COS_THETA     = Math.cos(0.1);
     
-   /** Number of iterations to run constraint projection */
+    /** rho_0, the desired initial density of the cloth in kg/m^2*/
+    public static final double REST_DENSITY = 1.54;
+    
+    /** Number of iterations to run constraint projection */
     public static final int NUM_SOLVER_ITERATIONS = 2;
     
-    /** rho_0, the desired standing density of the fluid. */
-    public static final double REST_DENSITY = 2300;
+    /** Stiffness of cloth stretch constraint. */
+    public static final double K_STRETCH = .2;
     
-    /** The "smearing distance" of the wave functions. */
-    public static final double KERNEL_RADIUS_H = 0.1;
-    
-    /** The coefficient for the viscosity filter. */
-    public static final double VISCOSITY_C = 0.000001;
-    
-    /** In case we are implementing elastic collisions. Currently unused. */
-    public static final double ELASTICITY_R = 0.1;
-    
-    /** The distance covered by each side of each bin. */
-    public static final double BIN_STEP = KERNEL_RADIUS_H;
-    
-    public static final int NUM_BINS = (int)Math.ceil(1. / BIN_STEP);
+    /** Stiffness of cloth bend constraint. */
+    public static final double K_BEND = .2;
     
 }

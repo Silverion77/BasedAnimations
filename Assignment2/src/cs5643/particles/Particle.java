@@ -33,7 +33,7 @@ public class Particle
 	Point3d x_star = new Point3d();
 
 	/** Undeformed/material Position. */
-	Point3d  x0 = new Point3d();
+	public Point3d  x0 = new Point3d();
 
 	/** Velocity. */
 	public Vector3d v = new Vector3d();

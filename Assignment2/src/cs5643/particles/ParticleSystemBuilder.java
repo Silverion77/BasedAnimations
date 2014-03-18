@@ -488,7 +488,6 @@ public class ParticleSystemBuilder implements GLEventListener
 			Mesh m = MeshBuilder.buildMesh(new File(fileName), particleSystem);
 			particleSystem.addMesh(m);
 		} catch (FileNotFoundException | BadMeshException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
