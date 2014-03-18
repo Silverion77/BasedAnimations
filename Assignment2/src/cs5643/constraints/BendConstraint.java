@@ -99,8 +99,17 @@ public class BendConstraint extends Constraint {
 	
 	@Override
 	public double evaluate() {
-		// TODO Auto-generated method stub
-		return 0;
+		temp1.set(p2.x_star);
+		temp1.sub(p1.x_star);
+		temp2.set(p3.x_star);
+		temp2.sub(p1.x_star);
+		temp2.cross(temp1, temp2);
+		temp2.normalize();
+		temp3.set(p4.x_star);
+		temp3.sub(p1.x_star);
+		temp3.cross(temp1, temp2);
+		temp3.normalize();
+		return Math.acos(temp2.dot(temp3)) - phi_0;
 	}
 
 	@Override

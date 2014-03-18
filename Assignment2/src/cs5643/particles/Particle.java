@@ -30,7 +30,7 @@ public class Particle
 	public Point3d  x = new Point3d();
 	
 	/** Predicted position in the middle of one timestep. */
-	Point3d x_star = new Point3d();
+	public Point3d x_star = new Point3d();
 
 	/** Undeformed/material Position. */
 	public Point3d  x0 = new Point3d();
