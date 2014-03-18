@@ -71,6 +71,7 @@ public class BendConstraint extends Constraint {
 						p2 = tmp2;
 					i.remove();
 					j.remove();
+					break;
 				}
 			}
 		}
