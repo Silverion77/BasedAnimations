@@ -21,8 +21,8 @@ public class Particle
 	/** Highlighted appearance if true, otherwise white. */
 	private boolean highlight = false;
 
-	/** Default inverse mass. */
-	public double m = 1;
+	/** Default mass. */
+	public double m = 0;
 
 	/** Deformed Position. */
 	public Point3d  x = new Point3d();

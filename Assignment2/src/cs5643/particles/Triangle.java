@@ -25,7 +25,9 @@ public class Triangle {
 		this.v1 = v1;
 		this.v2 = v2;
 		double mass = 1./3 * area() * Constants.REST_DENSITY;
-		// TODO add mass to each vertex
+		v0.m += mass;
+		v1.m += mass;
+		v2.m += mass;
 	}
 
 	/** Computes the unit-length normal associated with this triangle. */
