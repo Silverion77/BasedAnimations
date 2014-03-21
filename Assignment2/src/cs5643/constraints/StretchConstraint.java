@@ -68,23 +68,26 @@ public class StretchConstraint extends Constraint {
 	@Override
 	public void project() {
 		double value = evaluate();
+		if(isSatisfied(value)) {
+			return;
+		}
 		double w_ratio_1 = p1.w() / (p1.w() + p2.w());
 		double w_ratio_2 = - p2.w() / (p1.w() + p2.w());
 		computeN();
 		temp.set(gradient_temp);
-		temp.scale(value * w_ratio_1 * stiffness_k);
-		p1.x.add(temp);
+		temp.scale(-value * w_ratio_1 * stiffness_k);
+		p1.x_star.add(temp);
 		temp.set(gradient_temp);
-		temp.scale(value * w_ratio_2 * stiffness_k);
-		p2.x.add(temp);
+		temp.scale(-value * w_ratio_2 * stiffness_k);
+		p2.x_star.add(temp);
 	}
 	
 	/**
 	 * Sets temp to be the normal of the distance between the two.
 	 */
 	private void computeN() {
-		gradient_temp.set(p1.x);
-		gradient_temp.sub(p2.x);
+		gradient_temp.set(p1.x_star);
+		gradient_temp.sub(p2.x_star);
 		gradient_temp.normalize();
 	}
 

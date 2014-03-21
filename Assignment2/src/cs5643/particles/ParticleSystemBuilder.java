@@ -555,7 +555,12 @@ public class ParticleSystemBuilder implements GLEventListener
 			nFrames += 1;
 		}
 	}
+	
+	public static ParticleSystemBuilder system;
 
+	public static void stopEverything() {
+		system.gui.simulate = false;
+	}
 
 	/**
 	 * ### Runs the ParticleSystemBuilder. ###
@@ -564,6 +569,7 @@ public class ParticleSystemBuilder implements GLEventListener
 	{
 		try{
 			ParticleSystemBuilder psb = new ParticleSystemBuilder();
+			system = psb;
 			psb.start();
 
 		}catch(Exception e) {

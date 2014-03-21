@@ -121,6 +121,15 @@ public class ParticleSystem //implements Serializable
 			StretchConstraint sc = new StretchConstraint(e.v0, e.v1);
 			cloth_constrs.add(sc);
 		}
+		for(Triangle t1 : m.triangles) {
+			for(Triangle t2: m.triangles) {
+				if(t1.equals(t2)) continue;
+				BendConstraint bc = new BendConstraint(t1,t2);
+				if(bc.init) {
+					cloth_constrs.add(bc);
+				}
+			}
+		}
 	}
 
 	/** Creates particle and adds it to the particle system. 
@@ -167,6 +176,13 @@ public class ParticleSystem //implements Serializable
 		}
 		time = 0;
 	}
+	
+	public synchronized void clear() {
+		particles.clear();
+		cloth_constrs.clear();
+		collision_constrs.clear();
+		meshes.clear();
+	}
 
 	/**
 	 * Advances the time by one increment. The integrator used here should
@@ -176,6 +192,8 @@ public class ParticleSystem //implements Serializable
 	{
 		// Accumulate all external forces f_ext
 		for(Particle p_i : particles) {
+			p_i.f.set(0,0,0);
+			p_i.x_star.set(p_i.x);
 			for(Force f : forces) {
 				f.applyForce(p_i);
 			}
@@ -186,7 +204,7 @@ public class ParticleSystem //implements Serializable
 		}
 		
 		for(Mesh m : meshes) {
-			// TODO: use rigid damping, too spooky to use right now
+			// Do rigid damping
 			rigidDamp(m);
 		}
 		
@@ -291,7 +309,13 @@ public class ParticleSystem //implements Serializable
 			angular.add(temp1);
 		}
 		// At this point, have L and I.
-		bigI.invert();
+		try {
+			bigI.invert();
+		}
+		catch (SingularMatrixException e) {
+			System.err.println("Rigid damping aborted: cannot invert matrix I");
+			return;
+		}
 		bigI.transform(angular);
 		
 		// angular now holds w, the angular momentum

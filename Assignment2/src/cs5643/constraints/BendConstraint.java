@@ -7,6 +7,7 @@ import javax.vecmath.Vector3d;
 
 import cs5643.particles.Constants;
 import cs5643.particles.Particle;
+import cs5643.particles.ParticleSystemBuilder;
 import cs5643.particles.Triangle;
 import cs5643.particles.Utils;
 
@@ -21,7 +22,7 @@ public class BendConstraint extends Constraint {
 	private Particle p3;
 	private Particle p4;
 	private double phi_0;
-	boolean init;
+	public boolean init;
 	
 	// Workspace vectors
 	private static Vector3d temp = new Vector3d();
@@ -129,6 +130,7 @@ public class BendConstraint extends Constraint {
 		p2v.set(p2.x_star);
 		p3v.set(p3.x_star);
 		p4v.set(p4.x_star);
+//		System.out.println("p's: " + p1v + ", " + p2v + ", " + p3v + ", " + p4v);
 		// Calculate n1 and n2
 		n1.cross(p2v, p3v);
 		n1.normalize();
@@ -165,17 +167,28 @@ public class BendConstraint extends Constraint {
 		Utils.acc(q1, -1, q3);
 		Utils.acc(q1, -1, q4);
 		// Corrections
+//		System.out.println("q's before scaling: " + q1 + ", " + q2 + ", " + q3 + ", " + q4);
 		double num = -Math.sqrt(1 - Math.pow(d, 2))*Math.acos(d) - phi_0;
 		double denom = p1.w() * q1.lengthSquared() + p2.w() * q2.lengthSquared()
 						+ p3.w() * q3.lengthSquared() + p4.w() * q4.lengthSquared();
-		q1.scale(p1.w() * num / denom);
-		q2.scale(p2.w() * num / denom);
-		q3.scale(p3.w() * num / denom);
-		q4.scale(p4.w() * num / denom);
-		p1.x.add(q1);
-		p2.x.add(q2);
-		p3.x.add(q3);
-		p4.x.add(q4);
+		System.out.println("correction: " + num + " / " + denom);
+		if(denom == 0) {
+			return;
+		}
+		if(Double.isNaN(num) || Double.isNaN(denom)) {
+			ParticleSystemBuilder.stopEverything();
+			System.out.println(1/0);
+			return;
+		}
+		q1.scale(stiffness_k * p1.w() * num / denom);
+		q2.scale(stiffness_k * p2.w() * num / denom);
+		q3.scale(stiffness_k * p3.w() * num / denom);
+		q4.scale(stiffness_k * p4.w() * num / denom);
+//		System.out.println("q's: " + q1 + ", " + q2 + ", " + q3 + ", " + q4);
+		p1.x_star.add(q1);
+		p2.x_star.add(q2);
+		p3.x_star.add(q3);
+		p4.x_star.add(q4);
 	}
 
 	@Override

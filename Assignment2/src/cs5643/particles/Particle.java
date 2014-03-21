@@ -43,6 +43,9 @@ public class Particle
 	Vector3d temp = new Vector3d();
 	
 	public double w() {
+		if(m == 0) {
+			System.err.println("mass is 0");
+		}
 		return 1.0 / m;
 	}
 	
