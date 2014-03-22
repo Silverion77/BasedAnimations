@@ -89,8 +89,7 @@ public class StretchConstraint extends Constraint {
 	 * Sets temp to be the normal of the distance between the two.
 	 */
 	private void computeN() {
-		gradient_temp.set(p1.x_star);
-		gradient_temp.sub(p2.x_star);
+		gradient_temp.sub(p1.x_star, p2.x_star);
 		gradient_temp.normalize();
 	}
 

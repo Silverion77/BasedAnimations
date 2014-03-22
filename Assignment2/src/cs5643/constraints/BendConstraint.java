@@ -90,14 +90,14 @@ public class BendConstraint extends Constraint {
 	}
 	
 	private double calculatePhi_0() {
-		temp.sub(p2.x0, p1.x0);	//temp = p2 - p1
-		n1.sub(p3.x0, p1.x0);
+		temp.sub(p2.x, p1.x);	//temp = p2 - p1
+		n1.sub(p3.x, p1.x);
 		n1.cross(temp, n1);
 		n1.normalize();
-		n2.sub(p4.x0, p1.x0);
-		n2.cross(temp, n1);
+		n2.sub(p4.x, p1.x);
+		n2.cross(temp, n2);
 		n2.normalize();
-		return Math.acos(n1.dot(n2));
+		return Math.acos(clamp(n1.dot(n2)));
 	}
 	
 	@Override
@@ -107,7 +107,7 @@ public class BendConstraint extends Constraint {
 		n1.cross(temp, n1);
 		n1.normalize();
 		n2.sub(p4.x_star, p1.x_star);
-		n2.cross(temp, n1);
+		n2.cross(temp, n2);
 		n2.normalize();
 		return Math.acos(n1.dot(n2)) - phi_0;
 	}
@@ -128,7 +128,7 @@ public class BendConstraint extends Constraint {
 		n1.normalize();
 		n2.cross(p2v, p4v);
 		n2.normalize();
-		double d = n1.dot(n2);
+		double d = clamp(n1.dot(n2));
 		
 		// Calculate q3
 		q3.cross(p2v, n2);
@@ -154,8 +154,8 @@ public class BendConstraint extends Constraint {
 		temp.cross(n2, p4v);
 		Utils.acc(q1, d, temp);
 		temp.cross(p2v, p4v);
-		temp.scale(-1 / temp.length());
-		q2.add(temp);
+		q1.scale(-1 / temp.length());
+		q2.add(q1);
 		
 		// Calculate q1
 		q1.negate(q2);
@@ -185,7 +185,15 @@ public class BendConstraint extends Constraint {
 		p3.x_star.add(q3);
 		p4.x_star.add(q4);
 	}
-
+	
+	private double clamp (double d) {
+		if (d > 1)
+			d = 1;
+		if (d < -1)
+			d = -1;
+		return d;
+	}
+	
 	@Override
 	public Vector3d gradient(Particle p_j) {
 		// TODO Auto-generated method stub
