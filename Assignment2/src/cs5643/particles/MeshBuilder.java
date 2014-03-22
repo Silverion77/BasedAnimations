@@ -1,6 +1,7 @@
 package cs5643.particles;
 
 import java.io.*;
+import java.util.HashSet;
 import java.util.Scanner;
 
 import javax.vecmath.Point3d;
@@ -32,6 +33,8 @@ public class MeshBuilder {
 		Scanner s = new Scanner(file);
 		boolean doneWithVertices = false;
 		Edge[][] connectivity = new Edge[0][0];
+		HashSet<Edge> boundary = new HashSet<Edge>();
+		HashSet<Edge> interior = new HashSet<Edge>();
 		int line = 0;
 
 		while(s.hasNextLine()) {
@@ -93,11 +96,21 @@ public class MeshBuilder {
 
 					int smallIndex = index0 < index1 ? index0 : index1;
 					int bigIndex = index0 < index1 ? index1 : index0;
-
+					
+					Edge newEdge = connectivity[smallIndex][bigIndex];
 					if(connectivity[smallIndex][bigIndex] == null) {
-						connectivity[smallIndex][bigIndex] = new Edge(result.vertices.get(index0),
-								result.vertices.get(index1));
+						newEdge = new Edge(result.vertices.get(index0), result.vertices.get(index1));
+						connectivity[smallIndex][bigIndex] = newEdge;
 					}
+					
+					if(!boundary.contains(newEdge)) {
+						boundary.add(newEdge);
+					}	
+					else if(!interior.contains(newEdge)) {
+						boundary.remove(newEdge);
+						interior.add(newEdge);
+					}
+					
 					if (index0 < index1) {
 						if (connectivity[smallIndex][bigIndex].t0 != null) {
 							throw new BadMeshException(line, "Make sure all triangles have the same"+
@@ -128,6 +141,9 @@ public class MeshBuilder {
 				}
 			}
 		}
+		
+		result.isClosed = boundary.isEmpty();
+		System.out.println("Mesh is closed: " + result.isClosed);
 
 		s.close();
 		return result;

@@ -72,4 +72,17 @@ public class Edge {
 		if (self == v1) return v0;
 		return null;
 	}
+	
+	public int hashCode() {
+		return (v1.x0.hashCode() + v0.x0.hashCode());
+	}
+	
+	public boolean equals(Object other) {
+		if(!(other instanceof Edge)) {
+			return false;
+		}
+		Edge e = (Edge)other;
+		return ((this.v0.equals(e.v0) && this.v1.equals(e.v1)) ||
+				this.v1.equals(e.v0) && this.v0.equals(e.v1));
+	}
 }

@@ -44,6 +44,8 @@ public class Mesh {
 
 	/** The shader program used by the mesh. */
 	private ShaderProgram prog;
+	
+	public boolean isClosed = false;
 
 	/** Gets ready to display the mesh; compiles programs, etc. */
 	private void initDisplay(GL2 gl) {

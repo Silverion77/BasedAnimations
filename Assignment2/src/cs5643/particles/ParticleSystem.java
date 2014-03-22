@@ -130,6 +130,10 @@ public class ParticleSystem //implements Serializable
 				}
 			}
 		}
+		if(m.isClosed) {
+			VolumeConstraint vc = new VolumeConstraint(m);
+			cloth_constrs.add(vc);
+		}
 	}
 
 	/** Creates particle and adds it to the particle system. 

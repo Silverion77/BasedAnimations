@@ -41,6 +41,8 @@ public class Particle
 	
 	public boolean pinned = false;
 	
+	public Vector3d volumeGradient = new Vector3d();
+	
 	/** For scratch work. */
 	Vector3d temp = new Vector3d();
 	
