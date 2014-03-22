@@ -321,7 +321,7 @@ public class ParticleSystem //implements Serializable
 		bigI.transform(angular);
 		
 		// angular now holds w, the angular momentum
-		for(Particle p : particles) {
+		for(Particle p : m.vertices) {
 			// temp2 = r_i
 			temp2.set(p.x_star);
 			temp2.sub(x_cm);
