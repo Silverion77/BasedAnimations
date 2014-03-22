@@ -28,7 +28,7 @@ public interface Constants
     public static final double K_STRETCH = 0.4;
     
     /** Stiffness of cloth bend constraint. */
-    public static final double K_BEND = 0.0;
+    public static final double K_BEND = 0.2;
     
     public static final double K_DAMPING = 0.1;
     

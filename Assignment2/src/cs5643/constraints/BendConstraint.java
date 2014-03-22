@@ -171,8 +171,8 @@ public class BendConstraint extends Constraint {
 			return;
 		}
 		if(Double.isNaN(num) || Double.isNaN(denom)) {
-			ParticleSystemBuilder.stopEverything();
-			System.out.println(1/0);
+//			ParticleSystemBuilder.stopEverything();
+//			System.out.println(1/0);
 			return;
 		}
 		q1.scale(stiffness_k * p1.w() * num / denom);

@@ -126,7 +126,7 @@ public class ParticleSystem //implements Serializable
 				if(t1.equals(t2)) continue;
 				BendConstraint bc = new BendConstraint(t1,t2);
 				if(bc.init) {
-//					cloth_constrs.add(bc);
+					cloth_constrs.add(bc);
 				}
 			}
 		}
