@@ -178,7 +178,7 @@ public class ParticleSystemBuilder implements GLEventListener
 		glu.gluLookAt(eyePos.x, eyePos.y, eyePos.z, targetPos.x, targetPos.y, targetPos.z, 0, 1, 0);
 
 		gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, gui.modelView, 0);
-		
+
 		/// DRAW COMPUTATIONAL CELL BOUNDARY:
 		gl.glColor3f(1, 0, 0);
 		gl.glBegin(GL2.GL_LINE_LOOP);
@@ -208,7 +208,7 @@ public class ParticleSystemBuilder implements GLEventListener
 	class BuilderGUI implements MouseListener, MouseMotionListener, KeyListener
 	{
 		boolean simulate = false;
-		
+
 		double[] modelView = new double[16];
 		double[] identity = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 
@@ -223,7 +223,7 @@ public class ParticleSystemBuilder implements GLEventListener
 			guiFrame = new JFrame("Tasks");
 			guiFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			guiFrame.setLayout(new SpringLayout());
-			guiFrame.setLayout(new GridLayout(6,1));
+			guiFrame.setLayout(new GridLayout(7,1));
 
 			/* Add new task buttons here, then add their functionality below. */
 			ButtonGroup      buttonGroup  = new ButtonGroup();
@@ -232,6 +232,7 @@ public class ParticleSystemBuilder implements GLEventListener
 					new JButton("Load Mesh"),
 					new JToggleButton ("Create Particle", false), 
 					new JToggleButton ("Drag particle", false),
+					new JToggleButton ("Pin particle", false),
 					new JToggleButton ("[Some Other Task]", false),
 			};
 
@@ -267,9 +268,9 @@ public class ParticleSystemBuilder implements GLEventListener
 			// Display task if any
 			if(task != null) task.display(gl);
 		}
-		
+
 		void updateModelview() {
-			
+
 		}
 
 		/**
@@ -313,7 +314,10 @@ public class ParticleSystemBuilder implements GLEventListener
 					loadMeshFromFile();
 				}
 				else if(cmd.equals("Drag particle")) {
-					task = new PickParticleTask();
+					task = new DragParticleTask();
+				}
+				else if(cmd.equals("Pin particle")) {
+					task = new PinParticleTask();
 				}
 				else {
 					System.out.println("UNHANDLED ActionEvent: "+e);
@@ -360,9 +364,9 @@ public class ParticleSystemBuilder implements GLEventListener
 				break;
 			case KeyEvent.VK_E:
 				// TODO(Optional): Uncomment to make the frameExporter write images instead of text files
-				 frameExporter = ((frameExporter==null) ? (new FrameExporter(true)) : null);
+				frameExporter = ((frameExporter==null) ? (new FrameExporter(true)) : null);
 
-//				frameExporter = ((frameExporter==null) ? (new FrameExporter()) : null);
+				//				frameExporter = ((frameExporter==null) ? (new FrameExporter()) : null);
 				System.out.println("'e' : frameExporter = "+frameExporter);
 				break;
 			case KeyEvent.VK_L:
@@ -442,50 +446,42 @@ public class ParticleSystemBuilder implements GLEventListener
 				taskSelector.resetToRest(); //sets task=null;
 			}
 		}
-		
-		class PickParticleTask extends Task {
-			
-			private GL2 gl;
-			
-			private int[] viewport = new int[4];
-			private double[] nearPoint = new double[3];
-			private double[] farPoint = new double[3];
-			
-			private Vector3d rayDir = new Vector3d();
-			private Vector3d near = new Vector3d();
-			private Vector3d far = new Vector3d();
-			private Vector3d x1x0 = new Vector3d();
-			private Vector3d x2x1 = new Vector3d();
-			private Vector3d temp = new Vector3d();
-			private Particle dragged = null;
-			
-			private double depth;
-			
-			public void display(GL2 gl) {
-				this.gl = gl;
-			}
-			
-			public void mousePressed (MouseEvent e) {
-				if(e.getX() < 0 || e.getY() < 0) {
-					return;
-				}
-				if(e.getX() > width || e.getY() > height) {
-					return;
-				}
-				
-				gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, modelView, 0);
 
-				int mouseX = e.getX();
-				int mouseY = height - e.getY();
-				
+		class PickParticleTask extends Task {
+
+			protected int[] viewport = new int[4];
+			protected double[] nearPoint = new double[3];
+			protected double[] farPoint = new double[3];
+
+			protected Vector3d rayDir = new Vector3d();
+			protected Vector3d near = new Vector3d();
+			protected Vector3d far = new Vector3d();
+			protected Vector3d x1x0 = new Vector3d();
+			protected Vector3d x2x1 = new Vector3d();
+			protected Vector3d temp = new Vector3d();
+			protected Particle selected = null;
+
+			protected double depth;
+
+			public void display(GL2 gl) {}
+
+			public Particle determineNearest(int mouseX, int mouseY) {
+				if(mouseX < 0 || mouseY < 0) {
+					return null;
+				}
+				if(mouseX > width || mouseY > height) {
+					return null;
+				}
+				mouseY = height - mouseY;
+
 				viewport[0] = 0;
 				viewport[1] = 0;
 				viewport[2] = width;
 				viewport[3] = height;
-				
+
 				glu.gluUnProject(mouseX, mouseY, 0, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
 				glu.gluUnProject(mouseX, mouseY, 1, modelView, 0, identity, 0, viewport, 0, farPoint, 0);
-				
+
 				far.set(farPoint);
 				near.set(nearPoint);
 				rayDir.sub(far, near);
@@ -493,50 +489,82 @@ public class ParticleSystemBuilder implements GLEventListener
 
 				double dist = 0;
 				double minDist = Double.MAX_VALUE;
-				
+
+				Particle nearest = null;
+
 				for(Particle p : particleSystem.particles) {
 					dist = distanceSquared(p.x);
 					if(dist < minDist) {
 						minDist = dist;
-						dragged = p;
+						nearest = p;
 					}
 				}
-				
-				System.out.println(minDist);
-				if(dragged != null && minDist < 0.005) {
-					dragged.setPinned(true);
-				}
-				glu.gluProject(dragged.x.x, dragged.x.y, dragged.x.z, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
+				glu.gluProject(nearest.x.x, nearest.x.y, nearest.x.z, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
 				depth = nearPoint[2];
-			}
-			
-			public void mouseDragged(MouseEvent e) {
-				if(dragged != null) {
-					System.out.println("dragged at " + dragged.x);
-					glu.gluUnProject(e.getX(), height-e.getY(), depth, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
-					rayDir.set(nearPoint);
-					System.out.println("moved to " + rayDir);
-					dragged.x.set(nearPoint);
-					dragged.x_star.set(nearPoint);
+
+				if(minDist < 0.005) {
+					return nearest;
 				}
+				else return null;
 			}
-			
-			public void mouseReleased(MouseEvent e) {
-				if(dragged != null) {
-					dragged.setPinned(false);
-					dragged = null;
-				}
+
+			public void mousePressed (MouseEvent e) {
+				selected = determineNearest(e.getX(), e.getY());
 			}
-			
+
 			double distanceSquared(Point3d other) {
 				x2x1.sub(far, near);
 				x1x0.sub(near, other);
 				temp.cross(x2x1, x1x0);
 				return (temp.lengthSquared() / x2x1.lengthSquared());
 			}
-			
+
 			void reset() {
 				taskSelector.resetToRest();
+			}
+		}
+
+		class DragParticleTask extends PickParticleTask {
+
+			public void mousePressed(MouseEvent e) {
+				super.mousePressed(e);
+				if(selected != null) {
+					selected.setPinned(true);
+				}
+			}
+
+			public void mouseDragged(MouseEvent e) {
+				if(selected != null) {
+					System.out.println("dragged at " + selected.x);
+					glu.gluUnProject(e.getX(), height-e.getY(), depth, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
+					rayDir.set(nearPoint);
+					System.out.println("moved to " + rayDir);
+					selected.x.set(nearPoint);
+					selected.x_star.set(nearPoint);
+				}
+			}
+
+			public void mouseReleased(MouseEvent e) {
+				if(selected != null) {
+					selected.setPinned(false);
+					selected = null;
+				}
+			}
+
+		}
+
+		class PinParticleTask extends PickParticleTask {
+			public void mousePressed(MouseEvent e) {
+				super.mousePressed(e);
+				if(selected != null) {
+					if(selected.pinned) {
+						selected.setPinned(false);
+					}
+					else {
+						selected.setPinned(true);
+					}
+				}
+				selected = null;
 			}
 		}
 
@@ -579,7 +607,7 @@ public class ParticleSystemBuilder implements GLEventListener
 		}
 
 	}
-	
+
 	private void loadMeshFromFile()
 	{
 		JFileChooser fc = new JFileChooser("./mesh");
@@ -592,7 +620,7 @@ public class ParticleSystemBuilder implements GLEventListener
 			System.err.println("Error: Tried to load a frame from a non-existant file.");
 			return;
 		}
-		
+
 		try {
 			Mesh m = MeshBuilder.buildMesh(new File(fileName), particleSystem);
 			particleSystem.addMesh(m);
@@ -664,7 +692,7 @@ public class ParticleSystemBuilder implements GLEventListener
 			nFrames += 1;
 		}
 	}
-	
+
 	public static ParticleSystemBuilder system;
 
 	public static void stopEverything() {
