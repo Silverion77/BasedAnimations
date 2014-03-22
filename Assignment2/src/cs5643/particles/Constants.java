@@ -20,13 +20,15 @@ public interface Constants
     public static final double REST_DENSITY = 1.54;
     
     /** Number of iterations to run constraint projection */
-    public static final int NUM_SOLVER_ITERATIONS = 1;
+    public static final int NUM_SOLVER_ITERATIONS = 4;
+    
+    public static final double DRAG_COEFF = 0.99;
     
     /** Stiffness of cloth stretch constraint. */
-    public static final double K_STRETCH = 0.2;
+    public static final double K_STRETCH = 0.4;
     
     /** Stiffness of cloth bend constraint. */
-    public static final double K_BEND = 0.01;
+    public static final double K_BEND = 0.0;
     
     public static final double K_DAMPING = 0.1;
     

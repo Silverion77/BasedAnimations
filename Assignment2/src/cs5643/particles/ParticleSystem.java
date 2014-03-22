@@ -126,7 +126,7 @@ public class ParticleSystem //implements Serializable
 				if(t1.equals(t2)) continue;
 				BendConstraint bc = new BendConstraint(t1,t2);
 				if(bc.init) {
-					cloth_constrs.add(bc);
+//					cloth_constrs.add(bc);
 				}
 			}
 		}
@@ -226,11 +226,9 @@ public class ParticleSystem //implements Serializable
 		
 		for(Particle p_i : particles) {
 			// update velocity: v_i <- (p_i - x_i) / dt
-			p_i.v.set(p_i.x_star);
-			p_i.v.sub(p_i.x);
-			p_i.v.scale(1.0 / dt);
+			p_i.updateVelocity(dt);
 			// finalize prediction: x_i <- p_i
-			p_i.x.set(p_i.x_star);
+			p_i.finalizePrediction();
 		}
 		
 		// TODO: "the velocities of colliding vertices are modified according

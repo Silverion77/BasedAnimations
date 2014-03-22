@@ -39,12 +39,17 @@ public class Particle
 	/** Force accumulator. */
 	public Vector3d f = new Vector3d();
 	
+	public boolean pinned = false;
+	
 	/** For scratch work. */
 	Vector3d temp = new Vector3d();
 	
 	public double w() {
 		if(m == 0) {
 			System.err.println("mass is 0");
+		}
+		if(pinned) {
+			return 0;
 		}
 		return 1.0 / m;
 	}
@@ -86,7 +91,7 @@ public class Particle
 		float[] c = {0f, 0.7f, 1f, 1f};//default: cyan
 		c[1] = (float)x.y;
 		if(highlight) {
-			c[2] = 0;
+			c[0] = 1;
 		}
 		
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, c, 0); // Color used by shader
@@ -97,11 +102,37 @@ public class Particle
 		gl.glCallList(PARTICLE_DISPLAY_LIST); // Draw the particle
 		gl.glPopMatrix();
 	}
+	
+	public void updateVelocity(double dt) {
+		if(!pinned) {
+			v.set(x_star);
+			v.sub(x);
+			v.scale(1.0 / dt * Constants.DRAG_COEFF);
+		}
+		else {
+			v.set(0,0,0);
+		}
+	}
+	
+	public void finalizePrediction() {
+		if(!pinned) {
+			x.set(x_star);
+		}
+		else{
+			x_star.set(x);
+		}
+	}
 
 	/** Specifies whether particle should be drawn highlighted. */
 	public void setHighlight(boolean highlight) { 
 		this.highlight = highlight;   
 	}
+	
+	public void setPinned(boolean pinned) {
+		setHighlight(pinned);
+		this.pinned = pinned;
+	}
+	
 	/** True if particle should be drawn highlighted. */
 	public boolean getHighlight() { 
 		return highlight; 

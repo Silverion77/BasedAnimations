@@ -177,6 +177,8 @@ public class ParticleSystemBuilder implements GLEventListener
 		glu.gluPerspective(5, (float)width/height, 1, 100);
 		glu.gluLookAt(eyePos.x, eyePos.y, eyePos.z, targetPos.x, targetPos.y, targetPos.z, 0, 1, 0);
 
+		gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, gui.modelView, 0);
+		
 		/// DRAW COMPUTATIONAL CELL BOUNDARY:
 		gl.glColor3f(1, 0, 0);
 		gl.glBegin(GL2.GL_LINE_LOOP);
@@ -206,6 +208,9 @@ public class ParticleSystemBuilder implements GLEventListener
 	class BuilderGUI implements MouseListener, MouseMotionListener, KeyListener
 	{
 		boolean simulate = false;
+		
+		double[] modelView = new double[16];
+		double[] identity = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 
 		/** Current build task (or null) */
 		Task task;
@@ -226,6 +231,7 @@ public class ParticleSystemBuilder implements GLEventListener
 					new JButton("Load File"),
 					new JButton("Load Mesh"),
 					new JToggleButton ("Create Particle", false), 
+					new JToggleButton ("Drag particle", false),
 					new JToggleButton ("[Some Other Task]", false),
 			};
 
@@ -246,9 +252,8 @@ public class ParticleSystemBuilder implements GLEventListener
 		 * adornments. */
 		void simulateAndDisplayScene(GL2 gl)
 		{
-			/// TODO: OVERRIDE THIS INTEGRATOR (Doesn't use Force objects properly)
 			if(simulate) {
-				// We leave it to the particle system to advance the time in a stable way.
+				// We leave it to the particle system to advance the time in a stable way
 				particleSystem.advanceTime(DT);
 			}
 
@@ -261,6 +266,10 @@ public class ParticleSystemBuilder implements GLEventListener
 
 			// Display task if any
 			if(task != null) task.display(gl);
+		}
+		
+		void updateModelview() {
+			
 		}
 
 		/**
@@ -302,6 +311,9 @@ public class ParticleSystemBuilder implements GLEventListener
 				}
 				else if(cmd.equals("Load Mesh")) {
 					loadMeshFromFile();
+				}
+				else if(cmd.equals("Drag particle")) {
+					task = new PickParticleTask();
 				}
 				else {
 					System.out.println("UNHANDLED ActionEvent: "+e);
@@ -428,6 +440,103 @@ public class ParticleSystemBuilder implements GLEventListener
 			}
 			void reset() {
 				taskSelector.resetToRest(); //sets task=null;
+			}
+		}
+		
+		class PickParticleTask extends Task {
+			
+			private GL2 gl;
+			
+			private int[] viewport = new int[4];
+			private double[] nearPoint = new double[3];
+			private double[] farPoint = new double[3];
+			
+			private Vector3d rayDir = new Vector3d();
+			private Vector3d near = new Vector3d();
+			private Vector3d far = new Vector3d();
+			private Vector3d x1x0 = new Vector3d();
+			private Vector3d x2x1 = new Vector3d();
+			private Vector3d temp = new Vector3d();
+			private Particle dragged = null;
+			
+			private double depth;
+			
+			public void display(GL2 gl) {
+				this.gl = gl;
+			}
+			
+			public void mousePressed (MouseEvent e) {
+				if(e.getX() < 0 || e.getY() < 0) {
+					return;
+				}
+				if(e.getX() > width || e.getY() > height) {
+					return;
+				}
+				
+				gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, modelView, 0);
+
+				int mouseX = e.getX();
+				int mouseY = height - e.getY();
+				
+				viewport[0] = 0;
+				viewport[1] = 0;
+				viewport[2] = width;
+				viewport[3] = height;
+				
+				glu.gluUnProject(mouseX, mouseY, 0, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
+				glu.gluUnProject(mouseX, mouseY, 1, modelView, 0, identity, 0, viewport, 0, farPoint, 0);
+				
+				far.set(farPoint);
+				near.set(nearPoint);
+				rayDir.sub(far, near);
+				rayDir.normalize();
+
+				double dist = 0;
+				double minDist = Double.MAX_VALUE;
+				
+				for(Particle p : particleSystem.particles) {
+					dist = distanceSquared(p.x);
+					if(dist < minDist) {
+						minDist = dist;
+						dragged = p;
+					}
+				}
+				
+				System.out.println(minDist);
+				if(dragged != null && minDist < 0.005) {
+					dragged.setPinned(true);
+				}
+				glu.gluProject(dragged.x.x, dragged.x.y, dragged.x.z, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
+				depth = nearPoint[2];
+			}
+			
+			public void mouseDragged(MouseEvent e) {
+				if(dragged != null) {
+					System.out.println("dragged at " + dragged.x);
+					glu.gluUnProject(e.getX(), height-e.getY(), depth, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
+					rayDir.set(nearPoint);
+					System.out.println("moved to " + rayDir);
+					dragged.x.set(nearPoint);
+					dragged.x_star.set(nearPoint);
+				}
+			}
+			
+			public void mouseReleased(MouseEvent e) {
+				if(dragged != null) {
+					dragged.setPinned(false);
+					dragged = null;
+				}
+			}
+			
+			double distanceSquared(Point3d other) {
+				x2x1.sub(far, near);
+				x1x0.sub(near, other);
+				temp.cross(x2x1, x1x0);
+				return (temp.lengthSquared() / x2x1.lengthSquared());
+			}
+			
+			void reset() {
+				taskSelector.resetToRest();
 			}
 		}
 
