@@ -28,7 +28,6 @@ public class BendConstraint extends Constraint {
 	private static Vector3d temp = new Vector3d();
 	private static Vector3d n1 = new Vector3d();
 	private static Vector3d n2 = new Vector3d();
-	private static Vector3d p1v = new Vector3d();
 	private static Vector3d p2v = new Vector3d();
 	private static Vector3d p3v = new Vector3d();
 	private static Vector3d p4v = new Vector3d();
@@ -46,12 +45,8 @@ public class BendConstraint extends Constraint {
 	 */
 	public BendConstraint(Triangle t1, Triangle t2) {
 		super(Constants.K_BEND);
-		temp = new Vector3d();
-		n1 = new Vector3d();
-		n2 = new Vector3d();
 		if (checkAdjacent(t1, t2)) {
-			
-			calculatePhi_0();
+			phi_0 = calculatePhi_0();
 			init = true;
 		} else {
 			init = false;
@@ -94,15 +89,15 @@ public class BendConstraint extends Constraint {
 		return false;
 	}
 	
-	private void calculatePhi_0() {
-		temp.sub(p2.x0, p1.x0);
+	private double calculatePhi_0() {
+		temp.sub(p2.x0, p1.x0);	//temp = p2 - p1
 		n1.sub(p3.x0, p1.x0);
 		n1.cross(temp, n1);
 		n1.normalize();
 		n2.sub(p4.x0, p1.x0);
 		n2.cross(temp, n1);
 		n2.normalize();
-		phi_0 = Math.acos(n1.dot(n2));
+		return Math.acos(n1.dot(n2));
 	}
 	
 	@Override
@@ -124,54 +119,54 @@ public class BendConstraint extends Constraint {
 
 	@Override
 	public void project() {
-		if (isSatisfied(evaluate()))
-			return;
-		p1v.set(p1.x_star);
 		p2v.set(p2.x_star);
 		p3v.set(p3.x_star);
 		p4v.set(p4.x_star);
-//		System.out.println("p's: " + p1v + ", " + p2v + ", " + p3v + ", " + p4v);
+		
 		// Calculate n1 and n2
 		n1.cross(p2v, p3v);
 		n1.normalize();
 		n2.cross(p2v, p4v);
 		n2.normalize();
 		double d = n1.dot(n2);
+		
 		// Calculate q3
 		q3.cross(p2v, n2);
 		temp.cross(n1, p2v);
 		Utils.acc(q3, d, temp);
 		temp.cross(p2v, p3v);
 		q3.scale(1 / temp.length());
+		
 		// Calculate q4
 		q4.cross(p2v, n1);
-		temp.cross(n1, p2v);
+		temp.cross(n2, p2v);
 		Utils.acc(q4, d, temp);
 		temp.cross(p2v, p4v);
 		q4.scale(1 / temp.length());
+		
 		// Calculate q2
 		q2.cross(p3v, n2);
 		temp.cross(n1, p3v);
 		Utils.acc(q2, d, temp);
 		temp.cross(p2v, p3v);
 		q2.scale(-1 / temp.length());
-		temp.cross(p4v, n1);
-		q1.cross(n2, p4v);
-		Utils.acc(temp, d, q1);
-		q1.cross(p2v, p4v);
-		temp.scale(-1 / q1.length());
+		q1.cross(p4v, n1);
+		temp.cross(n2, p4v);
+		Utils.acc(q1, d, temp);
+		temp.cross(p2v, p4v);
+		temp.scale(-1 / temp.length());
 		q2.add(temp);
+		
 		// Calculate q1
-		q1.set(q2);
-		q1.scale(-1);
+		q1.negate(q2);
 		Utils.acc(q1, -1, q3);
 		Utils.acc(q1, -1, q4);
+		
 		// Corrections
-//		System.out.println("q's before scaling: " + q1 + ", " + q2 + ", " + q3 + ", " + q4);
-		double num = -Math.sqrt(1 - Math.pow(d, 2))*Math.acos(d) - phi_0;
+		double num = -Math.sqrt(1 - Math.pow(d, 2)) * (Math.acos(d) - phi_0);
 		double denom = p1.w() * q1.lengthSquared() + p2.w() * q2.lengthSquared()
 						+ p3.w() * q3.lengthSquared() + p4.w() * q4.lengthSquared();
-		System.out.println("correction: " + num + " / " + denom);
+//		System.out.println("correction: " + num + " / " + denom);
 		if(denom == 0) {
 			return;
 		}
