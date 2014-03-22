@@ -67,7 +67,7 @@ public class Mesh {
 		if(!init) initDisplay(gl);
 
 		float[] cFront = {0f, 0.8f, 0.3f};
-		float[] cBack = {0.8f, 0f, 0.3f};
+		float[] cBack = {0.3f, 0f, 0.8f};
 
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, cFront, 0);
 		gl.glMaterialfv(GL2.GL_BACK,  GL2.GL_DIFFUSE, cBack , 0);

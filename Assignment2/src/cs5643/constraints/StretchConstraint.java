@@ -71,6 +71,9 @@ public class StretchConstraint extends Constraint {
 		if(isSatisfied(value)) {
 			return;
 		}
+		if(p1.w() == 0 && p2.w() == 0) {
+			return;
+		}
 		double w_ratio_1 = p1.w() / (p1.w() + p2.w());
 		double w_ratio_2 = - p2.w() / (p1.w() + p2.w());
 		computeN();
