@@ -119,9 +119,9 @@ public class BendConstraint extends Constraint {
 
 	@Override
 	public void project() {
-		p2v.set(p2.x_star);
-		p3v.set(p3.x_star);
-		p4v.set(p4.x_star);
+		p2v.sub(p2.x_star, p1.x_star);
+		p3v.sub(p3.x_star, p1.x_star);
+		p4v.sub(p4.x_star, p1.x_star);
 		
 		// Calculate n1 and n2
 		n1.cross(p2v, p3v);

@@ -25,10 +25,10 @@ public interface Constants
     public static final double DRAG_COEFF = 0.95;
     
     /** Stiffness of cloth stretch constraint. */
-    public static final double K_STRETCH = 0.4;
+    public static final double K_STRETCH = 0.5;
     
     /** Stiffness of cloth bend constraint. */
-    public static final double K_BEND = 0.2;
+    public static final double K_BEND = 0.9;
     
     public static final double K_DAMPING = 0.1;
     
