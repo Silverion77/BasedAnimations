@@ -175,6 +175,7 @@ public class BendConstraint extends Constraint {
 //			System.out.println(1/0);
 			return;
 		}
+		double stiffness_k = Constants.getProjKB();
 		q1.scale(stiffness_k * p1.w() * num / denom);
 		q2.scale(stiffness_k * p2.w() * num / denom);
 		q3.scale(stiffness_k * p3.w() * num / denom);

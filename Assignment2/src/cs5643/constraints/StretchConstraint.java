@@ -77,6 +77,7 @@ public class StretchConstraint extends Constraint {
 		double w_ratio_1 = p1.w() / (p1.w() + p2.w());
 		double w_ratio_2 = - p2.w() / (p1.w() + p2.w());
 		computeN();
+		stiffness_k = Constants.getProjKS();
 		temp.set(gradient_temp);
 		temp.scale(-value * w_ratio_1 * stiffness_k);
 		p1.x_star.add(temp);

@@ -26,9 +26,25 @@ public class Constants
     
     /** Stiffness of cloth stretch constraint. */
     public static double K_STRETCH = 0;
+    private static double PROJ_K_STRETCH = 0;
+    public static double getProjKS() { return PROJ_K_STRETCH; }
+    
+    public static void setKStretch(double k) {
+    	K_STRETCH = k;
+    	PROJ_K_STRETCH = Math.pow((1 - k), 1. / Constants.NUM_SOLVER_ITERATIONS);
+    	PROJ_K_STRETCH = 1 - PROJ_K_STRETCH;
+    }
     
     /** Stiffness of cloth bend constraint. */
     public static double K_BEND = 0;
+    private static double PROJ_K_BEND = 0;
+    public static double getProjKB() { return PROJ_K_BEND; }
+    
+    public static void setKBend(double k) {
+    	K_BEND = k;
+    	PROJ_K_BEND = Math.pow((1 - k), 1. / Constants.NUM_SOLVER_ITERATIONS);
+    	PROJ_K_BEND = 1 - PROJ_K_BEND;
+    }
     
     public static final double K_DAMPING = 0.1;
     

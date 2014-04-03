@@ -270,7 +270,7 @@ public class ParticleSystemBuilder implements GLEventListener
 				public void stateChanged(ChangeEvent e) {
 					JSlider source = (JSlider)e.getSource();
 					if (!source.getValueIsAdjusting()) {
-						Constants.K_STRETCH = source.getValue() / 20.;
+						Constants.setKStretch(source.getValue() / 20.);
 						ksValue.setText("   " + Constants.K_STRETCH + "   ");
 					}
 				}
@@ -280,7 +280,7 @@ public class ParticleSystemBuilder implements GLEventListener
 				public void stateChanged(ChangeEvent e) {
 					JSlider source = (JSlider)e.getSource();
 					if (!source.getValueIsAdjusting()) {
-						Constants.K_BEND = source.getValue() / 20.;
+						Constants.setKBend(source.getValue() / 20.);
 						kbValue.setText("   " + Constants.K_BEND + "   ");
 					}
 				}
