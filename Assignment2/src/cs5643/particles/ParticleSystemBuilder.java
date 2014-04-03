@@ -225,7 +225,7 @@ public class ParticleSystemBuilder implements GLEventListener
 			guiFrame = new JFrame("Tasks");
 			guiFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			guiFrame.setLayout(new SpringLayout());
-			guiFrame.setLayout(new GridLayout(9,1));
+			guiFrame.setLayout(new GridLayout(11,1));
 
 			/* Add new task buttons here, then add their functionality below. */
 			ButtonGroup      buttonGroup  = new ButtonGroup();
@@ -244,16 +244,34 @@ public class ParticleSystemBuilder implements GLEventListener
 				buttons[i].addActionListener(taskSelector);
 			}
 			
-			JSlider kStretch = new JSlider(JSlider.HORIZONTAL, 0, 10, (int) Constants.K_STRETCH * 10);
-			JSlider kBend = new JSlider(JSlider.HORIZONTAL, 0, 10, (int) Constants.K_BEND * 10);
+			addKSliders();
+			
+			guiFrame.setSize(200,200);
+			guiFrame.pack();
+			guiFrame.setVisible(true);
+
+			task = null; // Set default task here
+		}
+		
+		void addKSliders() {
+			final JTextField ksValue = new JTextField("   " + Constants.K_STRETCH + "   ");
+			final JTextField kbValue = new JTextField("   " + Constants.K_BEND + "   ");
+			ksValue.setEditable(false);
+			kbValue.setEditable(false);
+			
+			JSlider kStretch = new JSlider(JSlider.HORIZONTAL, 0, 20, (int) Constants.K_STRETCH * 20);
+			JSlider kBend = new JSlider(JSlider.HORIZONTAL, 0, 20, (int) Constants.K_BEND * 20);
+			kStretch.setMajorTickSpacing(2);
+			kStretch.setMinorTickSpacing(1);
+			kBend.setMajorTickSpacing(2);
+			kBend.setMinorTickSpacing(1);
 			
 			kStretch.addChangeListener(new ChangeListener() {
 				public void stateChanged(ChangeEvent e) {
 					JSlider source = (JSlider)e.getSource();
 					if (!source.getValueIsAdjusting()) {
-						Constants.K_STRETCH = source.getValue() / 10.;
-						System.out.println(Constants.K_STRETCH);
-						// TODO: update label
+						Constants.K_STRETCH = source.getValue() / 20.;
+						ksValue.setText("   " + Constants.K_STRETCH + "   ");
 					}
 				}
 			});
@@ -262,23 +280,16 @@ public class ParticleSystemBuilder implements GLEventListener
 				public void stateChanged(ChangeEvent e) {
 					JSlider source = (JSlider)e.getSource();
 					if (!source.getValueIsAdjusting()) {
-						Constants.K_BEND = source.getValue() / 10.;
-						System.out.println(Constants.K_BEND);
-						// TODO: update label
+						Constants.K_BEND = source.getValue() / 20.;
+						kbValue.setText("   " + Constants.K_BEND + "   ");
 					}
 				}
 			});
 			
-			
-			kStretch.setMajorTickSpacing(2);
-			kStretch.setMinorTickSpacing(1);
-			kBend.setMajorTickSpacing(2);
-			kBend.setMinorTickSpacing(1);
-			
 			Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
 			labelTable.put(new Integer(0), new JLabel("0.0"));
-			labelTable.put(new Integer(5), new JLabel("0.5"));
-			labelTable.put(new Integer(10), new JLabel("1.0"));
+			labelTable.put(new Integer(10), new JLabel("0.5"));
+			labelTable.put(new Integer(20), new JLabel("1.0"));
 			kStretch.setLabelTable(labelTable);
 			kBend.setLabelTable(labelTable);
 			kStretch.setPaintTicks(true);
@@ -286,14 +297,20 @@ public class ParticleSystemBuilder implements GLEventListener
 			kBend.setPaintTicks(true);
 			kBend.setPaintLabels(true);
 			
-			guiFrame.add(kStretch);
-			guiFrame.add(kBend);
+			Container ks = new Container();
+			ks.setLayout(new FlowLayout());
+			ks.add(new JLabel("k-stretch"));
+			ks.add(ksValue);
 			
-			guiFrame.setSize(200,200);
-			guiFrame.pack();
-			guiFrame.setVisible(true);
-
-			task = null; // Set default task here
+			Container kb = new Container();
+			kb.setLayout(new FlowLayout());
+			kb.add(new JLabel("k-bend"));
+			kb.add(kbValue);
+			
+			guiFrame.add(ks);
+			guiFrame.add(kStretch);
+			guiFrame.add(kb);
+			guiFrame.add(kBend);
 		}
 
 		/** Simulate then display particle system and any builder
