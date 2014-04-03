@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.vecmath.*;
 import javax.media.opengl.*;
 import javax.media.opengl.awt.GLCanvas;
@@ -223,7 +225,7 @@ public class ParticleSystemBuilder implements GLEventListener
 			guiFrame = new JFrame("Tasks");
 			guiFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			guiFrame.setLayout(new SpringLayout());
-			guiFrame.setLayout(new GridLayout(7,1));
+			guiFrame.setLayout(new GridLayout(9,1));
 
 			/* Add new task buttons here, then add their functionality below. */
 			ButtonGroup      buttonGroup  = new ButtonGroup();
@@ -241,7 +243,52 @@ public class ParticleSystemBuilder implements GLEventListener
 				guiFrame.add(buttons[i]);
 				buttons[i].addActionListener(taskSelector);
 			}
-
+			
+			JSlider kStretch = new JSlider(JSlider.HORIZONTAL, 0, 10, (int) Constants.K_STRETCH * 10);
+			JSlider kBend = new JSlider(JSlider.HORIZONTAL, 0, 10, (int) Constants.K_BEND * 10);
+			
+			kStretch.addChangeListener(new ChangeListener() {
+				public void stateChanged(ChangeEvent e) {
+					JSlider source = (JSlider)e.getSource();
+					if (!source.getValueIsAdjusting()) {
+						Constants.K_STRETCH = source.getValue() / 10.;
+						System.out.println(Constants.K_STRETCH);
+						// TODO: update label
+					}
+				}
+			});
+			
+			kBend.addChangeListener(new ChangeListener() {
+				public void stateChanged(ChangeEvent e) {
+					JSlider source = (JSlider)e.getSource();
+					if (!source.getValueIsAdjusting()) {
+						Constants.K_BEND = source.getValue() / 10.;
+						System.out.println(Constants.K_BEND);
+						// TODO: update label
+					}
+				}
+			});
+			
+			
+			kStretch.setMajorTickSpacing(2);
+			kStretch.setMinorTickSpacing(1);
+			kBend.setMajorTickSpacing(2);
+			kBend.setMinorTickSpacing(1);
+			
+			Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+			labelTable.put(new Integer(0), new JLabel("0.0"));
+			labelTable.put(new Integer(5), new JLabel("0.5"));
+			labelTable.put(new Integer(10), new JLabel("1.0"));
+			kStretch.setLabelTable(labelTable);
+			kBend.setLabelTable(labelTable);
+			kStretch.setPaintTicks(true);
+			kStretch.setPaintLabels(true);
+			kBend.setPaintTicks(true);
+			kBend.setPaintLabels(true);
+			
+			guiFrame.add(kStretch);
+			guiFrame.add(kBend);
+			
 			guiFrame.setSize(200,200);
 			guiFrame.pack();
 			guiFrame.setVisible(true);
