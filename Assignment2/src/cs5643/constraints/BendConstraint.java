@@ -167,7 +167,7 @@ public class BendConstraint extends Constraint {
 		double denom = p1.w() * q1.lengthSquared() + p2.w() * q2.lengthSquared()
 						+ p3.w() * q3.lengthSquared() + p4.w() * q4.lengthSquared();
 //		System.out.println("correction: " + num + " / " + denom);
-		if(denom == 0) {
+		if(denom <= 0) {
 			return;
 		}
 		denom = Math.max(denom, 1e-22);

@@ -345,7 +345,7 @@ public class ParticleSystem //implements Serializable
 			bigI.invert();
 		}
 		catch (SingularMatrixException e) {
-			System.err.println("Rigid damping aborted: cannot invert matrix I");
+//			System.err.println("Rigid damping aborted: cannot invert matrix I");
 			return;
 		}
 		bigI.transform(angular);
