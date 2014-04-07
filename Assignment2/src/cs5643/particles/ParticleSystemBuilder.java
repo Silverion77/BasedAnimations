@@ -259,18 +259,18 @@ public class ParticleSystemBuilder implements GLEventListener
 			ksValue.setEditable(false);
 			kbValue.setEditable(false);
 			
-			JSlider kStretch = new JSlider(JSlider.HORIZONTAL, 1, 20, 10);
-			JSlider kBend = new JSlider(JSlider.HORIZONTAL, 1, 20, 10);
-			kStretch.setMajorTickSpacing(2);
-			kStretch.setMinorTickSpacing(1);
-			kBend.setMajorTickSpacing(2);
-			kBend.setMinorTickSpacing(1);
+			JSlider kStretch = new JSlider(JSlider.HORIZONTAL, 1, 99, 50);
+			JSlider kBend = new JSlider(JSlider.HORIZONTAL, 1, 99, 50);
+			kStretch.setMajorTickSpacing(10);
+			kStretch.setMinorTickSpacing(5);
+			kBend.setMajorTickSpacing(10);
+			kBend.setMinorTickSpacing(5);
 			
 			kStretch.addChangeListener(new ChangeListener() {
 				public void stateChanged(ChangeEvent e) {
 					JSlider source = (JSlider)e.getSource();
 					if (!source.getValueIsAdjusting()) {
-						Constants.setKStretch(source.getValue() / 20.);
+						Constants.setKStretch(source.getValue() / 100.);
 						ksValue.setText("   " + Constants.K_STRETCH + "   ");
 					}
 				}
@@ -280,18 +280,16 @@ public class ParticleSystemBuilder implements GLEventListener
 				public void stateChanged(ChangeEvent e) {
 					JSlider source = (JSlider)e.getSource();
 					if (!source.getValueIsAdjusting()) {
-						Constants.setKBend(source.getValue() / 20.);
+						Constants.setKBend(source.getValue() / 100.);
 						kbValue.setText("   " + Constants.K_BEND + "   ");
 					}
 				}
 			});
-			kStretch.setValue(10);
-			kBend.setValue(10);
 			
 			Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
-			labelTable.put(new Integer(1), new JLabel("0.05"));
-			labelTable.put(new Integer(10), new JLabel("0.5"));
-			labelTable.put(new Integer(20), new JLabel("1.0"));
+			labelTable.put(new Integer(1), new JLabel("0.01"));
+			labelTable.put(new Integer(50), new JLabel("0.50"));
+			labelTable.put(new Integer(99), new JLabel("0.99"));
 			kStretch.setLabelTable(labelTable);
 			kBend.setLabelTable(labelTable);
 			kStretch.setPaintTicks(true);
