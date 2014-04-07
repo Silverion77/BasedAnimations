@@ -170,6 +170,7 @@ public class BendConstraint extends Constraint {
 		if(denom == 0) {
 			return;
 		}
+		denom = Math.max(denom, 1e-22);
 		if(Double.isNaN(num) || Double.isNaN(denom)) {
 //			ParticleSystemBuilder.stopEverything();
 //			System.out.println(1/0);
@@ -188,7 +189,7 @@ public class BendConstraint extends Constraint {
 	}
 	
 	private double clamp (double d) {
-		if (d > 1)
+		if (d >= 1)
 			d = 1;
 		if (d < -1)
 			d = -1;

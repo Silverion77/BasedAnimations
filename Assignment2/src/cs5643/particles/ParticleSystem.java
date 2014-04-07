@@ -31,7 +31,7 @@ public class ParticleSystem //implements Serializable
 	public ArrayList<Force> forces;
 	
 	public ArrayList<Constraint> cloth_constrs;
-	
+	public ArrayList<Constraint> permanent_collisions;
 	public ArrayList<Constraint> collision_constrs;
 	
 	private CollisionPlane floor;
@@ -39,6 +39,9 @@ public class ParticleSystem //implements Serializable
 	private Vector3d x_cm, v_cm, angular;
 	private Vector3d temp1, temp2;
 	private Matrix3d r_tilde, r_tilde_T, bigI;
+	
+	private SpatialHashtable penaltyHash;
+	private SpatialHashtable spatialHash;
 
 	/** 
 	 * true iff prog has been initialized. This cannot be done in the
@@ -62,7 +65,11 @@ public class ParticleSystem //implements Serializable
 		particles = new ArrayList<Particle>();
 		forces = new ArrayList<Force>();
 		cloth_constrs = new ArrayList<Constraint>();
+		permanent_collisions = new ArrayList<Constraint>();
 		collision_constrs = new ArrayList<Constraint>();
+		
+		penaltyHash = new SpatialHashtable();
+		spatialHash = new SpatialHashtable();
 		
 		floor = new CollisionPlane(0,1,0,0,0,0);
 		
@@ -105,8 +112,7 @@ public class ParticleSystem //implements Serializable
 	
 	public synchronized void addParticle(Particle p) {
 		particles.add(p);
-		// TODO: get rid of this
-		collision_constrs.add(new PlaneConstraint(p, floor));
+		permanent_collisions.add(new PlaneConstraint(p, floor));
 	}
 
 	/** Useful for removing temporary forces, such as user-interaction
@@ -187,13 +193,15 @@ public class ParticleSystem //implements Serializable
 		collision_constrs.clear();
 		meshes.clear();
 	}
+	
+	private int timestamp = 1;
 
 	/**
 	 * Advances the time by one increment. The integrator used here should
 	 * be stable.
 	 */
 	public synchronized void advanceTime(double dt)
-	{
+	{		
 		// Accumulate all external forces f_ext
 		for(Particle p_i : particles) {
 			p_i.f.set(0,0,0);
@@ -201,6 +209,8 @@ public class ParticleSystem //implements Serializable
 			for(Force f : forces) {
 				f.applyForce(p_i);
 			}
+			p_i.f.add(p_i.penalty_f);
+			p_i.penalty_f.set(0,0,0);
 		}
 		
 		for(Particle p_i : particles) {
@@ -216,7 +226,21 @@ public class ParticleSystem //implements Serializable
 			Utils.acc(p_i.x_star, dt, p_i.v);
 		}
 		
-		// TODO: generate collision constraints
+		spatialHash.clearCollisions();
+		// Find all particle-triangle collisions
+		for(Particle p_i : particles) {
+			spatialHash.add(p_i, timestamp);
+		}
+		for(Mesh m : meshes) {
+			spatialHash.findCollisions(m, timestamp);
+		}
+		CollisionList collisions = spatialHash.getCollisions();
+		
+		// Generate collision constraints
+		while(!collisions.isEmpty()) {
+			Collision c = collisions.nextCollision();
+			collision_constrs.add(new VertexTriangleConstraint(c.particle, c.triangle));
+		}
 		
 		for(int count = 0; count < Constants.NUM_SOLVER_ITERATIONS; count++) {
 			// Project the constraints
@@ -224,6 +248,9 @@ public class ParticleSystem //implements Serializable
 				c.project();
 			}
 			for(Constraint c : collision_constrs) {
+				c.project();
+			}
+			for(Constraint c : permanent_collisions) {
 				c.project();
 			}
 		}
@@ -235,10 +262,13 @@ public class ParticleSystem //implements Serializable
 			p_i.finalizePrediction();
 		}
 		
+		collision_constrs.clear();
+		
 		// TODO: "the velocities of colliding vertices are modified according
 		// to friction and restitution coefficients"
 		
 		time += dt;
+		timestamp++;
 	}
 
 	/**

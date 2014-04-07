@@ -39,6 +39,10 @@ public class Particle
 	/** Force accumulator. */
 	public Vector3d f = new Vector3d();
 	
+	public double vel_damp = 1;
+	
+	public Vector3d penalty_f = new Vector3d();
+	
 	public boolean pinned = false;
 	
 	public Vector3d volumeGradient = new Vector3d();
@@ -109,11 +113,12 @@ public class Particle
 		if(!pinned) {
 			v.set(x_star);
 			v.sub(x);
-			v.scale(1.0 / dt * Constants.DRAG_COEFF);
+			v.scale(1.0 / dt * Constants.DRAG_COEFF * vel_damp);
 		}
 		else {
 			v.set(0,0,0);
 		}
+		vel_damp = 1;
 	}
 	
 	public void finalizePrediction() {

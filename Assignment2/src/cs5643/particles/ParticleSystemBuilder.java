@@ -259,8 +259,8 @@ public class ParticleSystemBuilder implements GLEventListener
 			ksValue.setEditable(false);
 			kbValue.setEditable(false);
 			
-			JSlider kStretch = new JSlider(JSlider.HORIZONTAL, 0, 20, (int) Constants.K_STRETCH * 20);
-			JSlider kBend = new JSlider(JSlider.HORIZONTAL, 0, 20, (int) Constants.K_BEND * 20);
+			JSlider kStretch = new JSlider(JSlider.HORIZONTAL, 1, 20, 10);
+			JSlider kBend = new JSlider(JSlider.HORIZONTAL, 1, 20, 10);
 			kStretch.setMajorTickSpacing(2);
 			kStretch.setMinorTickSpacing(1);
 			kBend.setMajorTickSpacing(2);
@@ -285,9 +285,11 @@ public class ParticleSystemBuilder implements GLEventListener
 					}
 				}
 			});
+			kStretch.setValue(10);
+			kBend.setValue(10);
 			
 			Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
-			labelTable.put(new Integer(0), new JLabel("0.0"));
+			labelTable.put(new Integer(1), new JLabel("0.05"));
 			labelTable.put(new Integer(10), new JLabel("0.5"));
 			labelTable.put(new Integer(20), new JLabel("1.0"));
 			kStretch.setLabelTable(labelTable);
@@ -563,6 +565,7 @@ public class ParticleSystemBuilder implements GLEventListener
 						nearest = p;
 					}
 				}
+				if(nearest == null) return null;
 				glu.gluProject(nearest.x.x, nearest.x.y, nearest.x.z, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
 				depth = nearPoint[2];
 
@@ -599,10 +602,8 @@ public class ParticleSystemBuilder implements GLEventListener
 
 			public void mouseDragged(MouseEvent e) {
 				if(selected != null) {
-					System.out.println("dragged at " + selected.x);
 					glu.gluUnProject(e.getX(), height-e.getY(), depth, modelView, 0, identity, 0, viewport, 0, nearPoint, 0);
 					rayDir.set(nearPoint);
-					System.out.println("moved to " + rayDir);
 					selected.x.set(nearPoint);
 					selected.x_star.set(nearPoint);
 				}
