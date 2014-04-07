@@ -84,6 +84,9 @@ public class Triangle {
 	public void addPenaltyForce(Particle p, double coeff) {
 		if(contains(p)) return;
 		double dist = distanceFromPoint(p.x_star);
+		if(dist == 0) {
+			return;
+		}
 		if(dist <= 10 * Constants.H_THICKNESS) {
 			temp.sub(v0.x_star, p.x_star);
 			double scale_factor = temp.dot(predicted_n);
