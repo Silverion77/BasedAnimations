@@ -253,6 +253,10 @@ public class ParticleSystemBuilder implements GLEventListener
 			task = null; // Set default task here
 		}
 		
+		/**
+		 * Adds sliders to GUI to change k constant values.
+		 * Listeners are added to update the textbox and alter the constant value.
+		 */
 		void addKSliders() {
 			final JTextField ksValue = new JTextField("   " + Constants.K_STRETCH + "   ");
 			final JTextField kbValue = new JTextField("   " + Constants.K_BEND + "   ");

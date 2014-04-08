@@ -12,7 +12,8 @@ import cs5643.particles.Triangle;
 import cs5643.particles.Utils;
 
 /**
- * 
+ * A constraint that tries to maintain the same angle between
+ * two triangles.
  * 
  * @author Ari Karo
  */
@@ -53,6 +54,14 @@ public class BendConstraint extends Constraint {
 		}
 	}
 	
+	/**
+	 * Given two triangles, t1 and t2, returns whether they are adjacent.
+	 * This method also sets the values p1, p2, p3, and p4 for the constraint
+	 * based on the adjacency of the two triangles.
+	 * @param t1 - first triangle for the constraint
+	 * @param t2 - secont triangle for the constraint
+	 * @return whether the 2 provided triangles are adjacent
+	 */
 	private boolean checkAdjacent(Triangle t1, Triangle t2) {
 		ArrayList<Particle> vertices_t1 = new ArrayList<Particle>();
 		vertices_t1.add(t1.v0);
@@ -89,6 +98,11 @@ public class BendConstraint extends Constraint {
 		return false;
 	}
 	
+	/**
+	 * Calculates phi_0 for the given constraint. This should only be called when the
+	 * bend constraint is first constructed.
+	 * @return the value of the angle phi_0
+	 */
 	private double calculatePhi_0() {
 		temp.sub(p2.x, p1.x);	//temp = p2 - p1
 		n1.sub(p3.x, p1.x);
@@ -101,6 +115,9 @@ public class BendConstraint extends Constraint {
 	}
 	
 	@Override
+	/**
+	 * Evaluates the angle between the two triangles in this constraint.
+	 */
 	public double evaluate() {
 		temp.sub(p2.x_star, p1.x_star);
 		n1.sub(p3.x_star, p1.x_star);
@@ -111,12 +128,19 @@ public class BendConstraint extends Constraint {
 		n2.normalize();
 		return Math.acos(n1.dot(n2)) - phi_0;
 	}
-
+	
+	/**
+	 * Checks based on being a equality constraint.
+	 */
 	@Override
 	public boolean isSatisfied(double d) {
 		return (d == 0);
 	}
 
+	/**
+	 * Computes the correction that will restore the rest angle phi_0.
+	 * Reference: Section 4.1 and equations 21 - 29 in PBD.
+	 */
 	@Override
 	public void project() {
 		p2v.sub(p2.x_star, p1.x_star);
@@ -188,6 +212,11 @@ public class BendConstraint extends Constraint {
 		p4.x_star.add(q4);
 	}
 	
+	/**
+	 * Clamps a given double in the range of [-1,1].
+	 * @param d - the value to clamp
+	 * @return clamped value of d in [-1,1]
+	 */
 	private double clamp (double d) {
 		if (d >= 1)
 			d = 1;
