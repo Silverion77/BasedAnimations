@@ -9,6 +9,9 @@ Videos (in videos/ directory):
 							 values of .2, .5, and .8.
   - collisions.mp4: demo of two spheres bumping into one another with collisions.s
   - dragging_sphere.mp4: demo of particle dragging on a inflated sphere.
+  - self_collisions.mp4: demo of self collisions with piece of cloth.
+  - stiff_sliders.mp4: demo of the k-value sliders used while simulation.
+					   First k_stretch is altered, followed by k_bend.
   
 Summary:
 
@@ -23,7 +26,7 @@ Findings:
 
 Collaborators:
     
-We did not significantly discuss the assignment with anyone outside our group.
+http://www.feenixcollection.com/images/feenixautore4.pngWe did not significantly discuss the assignment with anyone outside our group.
 
 
 
