@@ -21,7 +21,7 @@ public class Constants
     public static final double REST_DENSITY = 1.54;
     
     /** Number of iterations to run constraint projection */
-    public static final int NUM_SOLVER_ITERATIONS = 25;
+    public static final int NUM_SOLVER_ITERATIONS = 24;
     
     public static final double DRAG_COEFF = 0.9;
     
