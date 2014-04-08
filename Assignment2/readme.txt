@@ -20,7 +20,10 @@ class and in the paper "Position Based Dynamics" by Müller, Heidelberger, et al
 simulator follows the timestepping scheme given in the paper.
 
 
-As extensions, we
+As extensions, we implemented both self-collisions as described in section 4.3 in the paper.
+This was further expanded to allow collisions between objects.
+Additionally, we added simple interactive k-value sliders that allow the user to alter the value
+of k-bend and k-stretch during the simulation.
 
 Findings:
 
