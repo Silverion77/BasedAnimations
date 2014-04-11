@@ -202,9 +202,7 @@ fracture simulation had been described, dating back as early as
 Terzopoulos et al. \cite{Ter88} and Norton et al. \cite{Nor91}, the
 latter making use of a mass-spring model. O'Brien et al. \cite{Obr99}
 presented a method that used continuum mechanics to compute internal
-stresses and fracture directions. Stress computation produces more
-physically accurate fractures, but at the cost of computation speed
-and controllability.
+stresses and fracture directions.
 
 Parker et al. \cite{Par09} proposed a method for fracture simulation
 that used a relatively coarse tetrahedral mesh, where objects can
@@ -221,7 +219,28 @@ surfaces \cite{Rag02}, and tetrahedralization \cite{Par09}.
 
 \section{Technical Description}
 
-Technical stuff goes here.
+The method described only works with meshes that satisfy the following
+three properties: (1) the meshes are composed of convex pieces, (2)
+the pieces do not overlap, and (3) any two pieces are physically
+connected if and only if the first piece has at least one face that
+partially or fully overlaps one face of the second piece, and the two
+faces are coplanar with opposite normals. A mesh satisfying this is
+called a compound. Note that meshes created by volumetric approximate
+convex decomposition satisfy this property by default; the exact
+algorithm for performing the VACD is given in the paper.
+
+The method uses fracture patterns, which are partitions of the entire
+space into convex pieces. Once fracturing is called for, the following
+steps are performed. The fracture pattern is first translated to align
+with the impact location. We then compute all intersections of all
+cells of the fracture pattern with all convex pieces of the
+object. Next, in order to save computation time, we find all pieces
+that are completely covered with newly created convexes, and replace
+these all with a single convex with the same shape. All convexes
+within the same cell are then combined to form a new
+compound. Finally, we check for disconnected ``islands'' of convexes
+that have been grouped into the same mesh, and turn them into separate
+compounds.
 
 \section{Proposal and Expectations}
 
