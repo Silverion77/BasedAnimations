@@ -30,7 +30,7 @@ public class RigidBodySystem
 
 	/** Basic constructor. */
 	public RigidBodySystem() {
-		addForce(new Gravity());
+		addForce(new Gravity(this));
 	}
 
 	/** Adds a force object (until removed) */
@@ -102,32 +102,30 @@ public class RigidBodySystem
 	 */
 	public synchronized void advanceTime(double dt)
 	{
-		{
-			for (Convex c : convexes) {
-				c.force.set(0,0);
-				for(Force force : forces) {
-					force.applyForce(c);
-				}
-			}
+		for (Convex c : convexes) {
+			c.clearForces();
+		}
+		
+		for(Force force : forces) {
+			force.applyForce();
+		}
 
-			for(Convex c : convexes) {
-				Utils.acc(c.v, dt / c.getMass(), c.force);
-				// TODO: angular stuff
-			}
-			
-			for(Convex c : convexes) {
-				Utils.acc(c.x_star, dt, c.v);
-			}
-			
-			// TODO: improve dumb collision handling here
-			for(Convex c : convexes) {
-				c.putOnFloor();
-			}
+		for(Convex c : convexes) {
+			c.applyAccelerations(dt);
+		}
 
-			for(Convex c : convexes) {
-				c.updateVelocity(dt);
-				c.finalizePrediction();
-			}
+		for(Convex c : convexes) {
+			c.applyVelocities(dt);
+		}
+
+		// TODO: improve dumb collision handling here
+		for(Convex c : convexes) {
+			c.putOnFloor();
+		}
+
+		for(Convex c : convexes) {
+			c.updateVelocity(dt);
+			c.finalizePrediction();
 		}
 
 		if(collisionProcessor == null) {
@@ -138,6 +136,10 @@ public class RigidBodySystem
 		// TODO: advance the time
 
 		time += dt;
+	}
+
+	public void fractureConvex(Convex c) {
+		// TODO: THIS
 	}
 
 	/** Enables/disables collision processing. */

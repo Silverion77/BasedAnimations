@@ -12,7 +12,7 @@ public interface Force
     /** 
      * Causes force to be applied to affected bodies.
      */
-    public void applyForce(Convex c);
+    public void applyForce();
 
     /** Display any instructive force information, e.g., connecting spring. */
     public void display(GL gl);

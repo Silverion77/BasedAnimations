@@ -95,5 +95,9 @@ public class Utils
 		return c;
 	}
 	
+	public static double cross2d(Vector2d u, Vector2d v) {
+		return (u.x * v.y) - (u.y * v.x);
+	}
+	
 	
 }

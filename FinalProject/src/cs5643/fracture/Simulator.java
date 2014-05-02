@@ -32,10 +32,10 @@ public class Simulator implements GLEventListener {
 	public Simulator() {
 		rbs = new RigidBodySystem();
 		
-		Point2d p1 = new Point2d(0.25, 0.75);
-		Point2d p2 = new Point2d(0.75, 0.75);
-		Point2d p3 = new Point2d(0.75, 0.25);
-		Point2d p4 = new Point2d(0.25, 0.25);
+		Point2d p1 = new Point2d(0.30, 0.75);
+		Point2d p2 = new Point2d(0.70, 0.25);
+		Point2d p3 = new Point2d(0.25, 0.50);
+		Point2d p4 = new Point2d(0.75, 0.50);
 		
 		ArrayList<Point2d> list = new ArrayList<Point2d>();
 		list.add(p1);
@@ -414,10 +414,6 @@ public class Simulator implements GLEventListener {
 	{
 		public boolean image = false;
 		private int nFrames  = 0;
-
-		FrameExporter()  { 
-			exportId += 1;
-		}
 
 		FrameExporter(boolean image) {
 			this.image = image;
