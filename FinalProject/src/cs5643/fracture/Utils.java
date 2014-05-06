@@ -59,6 +59,14 @@ public class Utils
 	
 	private static PointSorter sorter = new PointSorter();
 	
+	/**
+	 * Tests if p1,p2,p3 (in that order) form a counterclockwise turn.
+	 * Returns positive if they are CCW, negative if they are CW, 0 if they are co-linear.
+	 * @param p1
+	 * @param p2
+	 * @param p3
+	 * @return
+	 */
 	public static double ccw(Point2d p1, Point2d p2, Point2d p3) {
 		return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
 	}
@@ -99,5 +107,26 @@ public class Utils
 		return (u.x * v.y) - (u.y * v.x);
 	}
 	
+	private static Vector2d r = new Vector2d();
+	private static Vector2d s = new Vector2d();
+	private static Vector2d q_p = new Vector2d();
 	
+	/**
+	 * Determines the intersection of line segments (p1, p2) and (q1, q2) if it exists
+	 */
+	public static Point2d intersectionLineSegments(Point2d p, Point2d p2, Point2d q, Point2d q2) {
+		r.sub(p2, p);
+		s.sub(q2, q);
+		q_p.sub(q, p);
+		double rxs = Utils.cross2d(r, s);
+		double t = Utils.cross2d(q_p, s) / rxs;
+		double u = Utils.cross2d(q_p, r) / rxs;
+		if(0 <= t && t <= 1 && 0 <= u && u <= 1) {
+			Point2d ret = new Point2d();
+			ret.scale(t, r);
+			ret.add(p);
+			return ret;
+		}
+		return null;
+	}
 }

@@ -32,10 +32,15 @@ public class Simulator implements GLEventListener {
 	public Simulator() {
 		rbs = new RigidBodySystem();
 		
-		Point2d p1 = new Point2d(0.30, 0.75);
-		Point2d p2 = new Point2d(0.70, 0.25);
-		Point2d p3 = new Point2d(0.25, 0.50);
-		Point2d p4 = new Point2d(0.75, 0.50);
+		Point2d p1 = new Point2d(0.05, 0.50);
+		Point2d p2 = new Point2d(0.55, 0.50);
+		Point2d p3 = new Point2d(0.30, 0.75);
+		Point2d p4 = new Point2d(0.30, 0.25);
+		
+		Point2d q1 = new Point2d(0.37, 0.45);
+		Point2d q2 = new Point2d(0.87, 0.45);
+		Point2d q3 = new Point2d(0.62, 0.70);
+		Point2d q4 = new Point2d(0.62, 0.20);
 		
 		ArrayList<Point2d> list = new ArrayList<Point2d>();
 		list.add(p1);
@@ -43,7 +48,14 @@ public class Simulator implements GLEventListener {
 		list.add(p3);
 		list.add(p4);
 		Convex c = Utils.makeHullFromPoints(list);
+		list.clear();
+		list.add(q1);
+		list.add(q2);
+		list.add(q3);
+		list.add(q4);
+		Convex c2 = Utils.makeHullFromPoints(list);
 		rbs.add(c);
+		rbs.add(c2);
 	}
 
 	@Override

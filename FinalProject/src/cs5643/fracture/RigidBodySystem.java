@@ -31,6 +31,7 @@ public class RigidBodySystem
 	/** Basic constructor. */
 	public RigidBodySystem() {
 		addForce(new Gravity(this));
+		addForce(new NormalForce(this));
 	}
 
 	/** Adds a force object (until removed) */
@@ -116,6 +117,7 @@ public class RigidBodySystem
 
 		for(Convex c : convexes) {
 			c.applyVelocities(dt);
+			c.dampVelocities();
 		}
 
 		// TODO: improve dumb collision handling here
@@ -124,14 +126,16 @@ public class RigidBodySystem
 		}
 
 		for(Convex c : convexes) {
-			c.updateVelocity(dt);
 			c.finalizePrediction();
 		}
 
 		if(collisionProcessor == null) {
 			collisionProcessor = new CollisionProcessor(convexes);
 		}
-		if(processCollisions) collisionProcessor.processCollisions();
+		
+		if(processCollisions) {
+			collisionProcessor.processCollisions();
+		}
 
 		// TODO: advance the time
 
@@ -147,6 +151,7 @@ public class RigidBodySystem
 	{
 		processCollisions = enable;
 	}
+	
 	/** Returns true if collision processing is enabled, and false
 	 * otherwise. */
 	public boolean getProcessCollisions()

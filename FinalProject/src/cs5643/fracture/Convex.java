@@ -10,11 +10,20 @@ import javax.media.opengl.GL2;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
 
+/**
+ * A convex polygon, represented as a centroid in world space, and a
+ * set of vertices in body space.
+ * 
+ * The list of vertices is counter-clockwise.
+ * 
+ * @author Chris
+ *
+ */
 public class Convex {
 	
 	private ArrayList<Point2d> points;
 	private double angle;
-	private double mass, angularVelocity, torque;
+	private double mass;
 	
 	private boolean pinned = false;
 	
@@ -22,6 +31,9 @@ public class Convex {
 	public Point2d x_star;
 	
 	public Vector2d force, v;
+	public double torque, angularVelocity;
+	
+	private double boundingRadius;
 	
 	private double inertia;
 	
@@ -65,8 +77,29 @@ public class Convex {
 			p.x -= accx;
 			p.y -= accy;
 		}
+		
+		temp.set(0,0);
+		for(Point2d p : points) {
+			boundingRadius = Math.max(boundingRadius, p.distance(temp));
+		}
+		
 		inertia = momentOfInertia();
-		System.out.println(inertia);
+	}
+	
+	public List<Point2d> getPoints() {
+		return points;
+	}
+	
+	public double boundingRadius() {
+		return boundingRadius;
+	}
+	
+	public int nextCCW(int i) {
+		return (i+1) % points.size();
+	}
+	
+	public int nextCW(int i) {
+		return (i+1) % points.size();
 	}
 	
 	/**
@@ -147,10 +180,18 @@ public class Convex {
 			double dy = y - beforeY;
 			double dx = dy / slope;
 			double intersection_x = beforeX + dx;
-			if(intersection_x < x) continue;
+			if(intersection_x < x) {
+				continue;
+			}
+			else if(beforeY == y) {
+				continue;
+			}
+			else if(afterY == y) {
+				continue;
+			}
 			// See if the side crosses the edge on the correct side of the ray
-			else if((beforeY >= y && afterY <= y) || (beforeY <= y && afterY >= y)) {
-				numCrossings += 1;
+			else if((beforeY > y && afterY < y) || (beforeY < y && afterY > y)) {
+				numCrossings++;
 			}
 		}
 		return (numCrossings % 2 == 1);
@@ -214,12 +255,17 @@ public class Convex {
 	
 	public void applyAccelerations(double dt) {
 		Utils.acc(v, dt / getMass(), force);
-		angularVelocity += torque / inertia;
+		angularVelocity += dt * torque / inertia;
 	}
 	
 	public void applyVelocities(double dt) {
 		Utils.acc(x_star, dt, v);
 		angle += dt * angularVelocity;
+	}
+	
+	public void dampVelocities() {
+		angularVelocity *= Constants.ANGULAR_DAMP;
+		v.scale(Constants.LINEAR_DAMP);
 	}
 	
 	public void updateVelocity(double dt) {
@@ -243,4 +289,58 @@ public class Convex {
 		}
 	}
 	
+	private static ArrayList<Point2d> pointsc1 = new ArrayList<Point2d>();
+	private static ArrayList<Point2d> pointsc2 = new ArrayList<Point2d>();
+	private static ArrayList<Point2d> intersections = new ArrayList<Point2d>();
+	
+	private static ArrayList<Point2d> intersections(Convex c1, Convex c2) {
+		intersections.clear();
+		pointsc1.clear();
+		for(Point2d p : c1.points) {
+			Point2d p2 = new Point2d();
+			c1.pointToWorldSpace(p, p2);
+			pointsc1.add(p2);
+		}
+		pointsc2.clear();
+		for(Point2d p : c2.points) {
+			Point2d p2 = new Point2d();
+			c2.pointToWorldSpace(p, p2);
+			pointsc2.add(p2);
+		}
+
+		for(Point2d p1 : pointsc1) {
+			if(c2.pointInPolygon(p1)) {
+				intersections.add(p1);
+			}
+		}
+		for(Point2d p2 : pointsc2) {
+			if(c1.pointInPolygon(p2)) {
+				intersections.add(p2);
+			}
+		}
+		return intersections;
+	}
+	
+	private static void findCrossings(Convex c1, Convex c2, ArrayList<Point2d> acc) {
+		for(int i = 0; i < pointsc1.size(); i++) {
+			Point2d p1 = pointsc1.get(i);
+			Point2d p2 = pointsc1.get((i+1) % pointsc1.size());
+			for(int j = 0; j < pointsc1.size(); j++) {
+				Point2d q1 = pointsc2.get(j);
+				Point2d q2 = pointsc2.get((j+1) % pointsc2.size());
+				Point2d inter = Utils.intersectionLineSegments(p1, p2, q1, q2);
+				if(inter != null) acc.add(inter);
+			}
+		}
+	}
+	
+	public static boolean intersects(Convex c1, Convex c2) {
+		return !intersections(c1, c2).isEmpty();
+	}
+	
+	public static Convex intersection(Convex c1, Convex c2) {
+		ArrayList<Point2d> ps = intersections(c1,c2);
+		findCrossings(c1, c2, ps);
+		return Utils.makeHullFromPoints(ps);
+	}
 }
