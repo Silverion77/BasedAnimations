@@ -11,7 +11,7 @@ public class Gravity implements Force {
 		rbs = r;
 	}
 
-	Point2d force = new Point2d(0, -9.8);
+	Point2d force = new Point2d(0, -Constants.GRAVITY_FORCE);
 	
 	@Override
 	public void applyForce() {

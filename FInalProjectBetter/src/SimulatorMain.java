@@ -1,94 +1,28 @@
-package cs5643.fracture;
-
 import java.awt.GridLayout;
-
-import javax.media.opengl.*;
-
 import java.awt.event.*;
 import java.util.ArrayList;
 
+import javax.media.opengl.*;
 import javax.media.opengl.awt.GLCanvas;
 import javax.swing.*;
-import javax.vecmath.Point2d;
-import javax.vecmath.Vector2d;
 
-import com.jogamp.opengl.util.*;
+import org.dyn4j.geometry.Vector2;
 
+import com.jogamp.opengl.util.Animator;
+import com.jogamp.opengl.util.GLReadBufferUtil;
 
-public class Simulator implements GLEventListener {
+public class SimulatorMain implements GLEventListener {
 
-	private JFrame frame = null;
+	private long nextUpdateTime = 0;
 
-	private BuilderGUI gui;
-	private FrameExporter frameExporter;
 	private OrthoMap orthoMap;
-	private boolean drawWireframe = false;
-	private boolean simulate = false;
-	
-	private RigidBodySystem rbs;
-	
-	public static final double DT = 0.016;
 
-	public Simulator() {
-		rbs = new RigidBodySystem();
-		
-		Point2d p1 = new Point2d(0.05, 0.50);
-		Point2d p2 = new Point2d(0.55, 0.50);
-		Point2d p3 = new Point2d(0.30, 0.75);
-		Point2d p4 = new Point2d(0.30, 0.25);
-		
-		Point2d q1 = new Point2d(0.20, 0.45);
-		Point2d q2 = new Point2d(0.80, 0.45);
-		Point2d q3 = new Point2d(0.55, 0.70);
-		Point2d q4 = new Point2d(0.25, 0.20);
-		
-		ArrayList<Point2d> list = new ArrayList<Point2d>();
-		list.add(p1);
-		list.add(p2);
-		list.add(p3);
-		list.add(p4);
-		Convex c = Utils.makeHullFromPoints(list);
-		list.clear();
-		list.add(q1);
-		list.add(q2);
-		list.add(q3);
-		list.add(q4);
-		Convex c2 = Utils.makeHullFromPoints(list);
-		rbs.add(c);
-		rbs.add(c2);
-		Convex c3 = Convex.intersection(c, c2);
-		rbs.add(c3);
-	}
+	private JFrame frame;
+	private FrameExporter frameExporter;
+	private BuilderGUI gui;
+	private boolean simulate;
 
-	@Override
-	public void display(GLAutoDrawable drawable) {
-		GL2 gl = drawable.getGL().getGL2();
-		gl.glClearColor(1,1,1,0);
-		gl.glClear(GL2.GL_COLOR_BUFFER_BIT); //  | GL.GL_DEPTH_BUFFER_BIT);
-
-		{/// DRAW COMPUTATIONAL CELL BOUNDARY:
-			gl.glBegin(GL2.GL_LINE_STRIP);
-			if (simulate) {
-				gl.glColor4f(0,0,0,1);
-			}
-			else {
-				gl.glColor4f(1,0,0,1);
-			}
-			gl.glVertex2d(0,0);	gl.glVertex2d(1,0);	gl.glVertex2d(1,1);	gl.glVertex2d(0,1);	gl.glVertex2d(0,0);
-			gl.glEnd();
-		}
-
-		if (drawWireframe)  gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_LINE);
-		else                gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_FILL);
-
-		gui.simulateAndDisplayScene(gl);/// <<<-- MAIN CALL
-	}
-
-	@Override
-	public void dispose(GLAutoDrawable arg0) {
-		// TODO Auto-generated method stub
-
-	}
+	private FractureSystem fractureSystem = new FractureSystem();
 
 	public void start()
 	{
@@ -123,63 +57,115 @@ public class Simulator implements GLEventListener {
 		});
 
 		frame.pack();
-		frame.setSize(600,600);
+		frame.setSize(816,639);
 		frame.setLocation(200, 0);
 		frame.setVisible(true);
 		animator.start();
 	}
 
-	@Override
-	public void init(GLAutoDrawable drawable) {
-		// DEBUG PIPELINE (can use to provide GL error feedback... disable for speed)
-		//drawable.setGL(new DebugGL(drawable.getGL()));
+	private ArrayList<Vector2> points = new ArrayList<Vector2>();
 
-		GL2 gl = drawable.getGL().getGL2();
-		System.err.println("INIT GL IS: " + gl.getClass().getName());
+	public void createConvexFromPoints() {
+		if(points.size() < 3) {
+			points.clear();
+			return;
+		}
+		try {
+			ConvexPolygon p = new ConvexPolygon(points);
+			fractureSystem.addConvex(p);
+			points.clear();
+		}
+		catch(IllegalArgumentException e) {
+			System.err.println("Invalid polygon.");
+			points.clear();
+		}
+	}
 
-		gl.setSwapInterval(1);
+	public void init(GLAutoDrawable glDrawable) {
+		GL2 gl2 = glDrawable.getGL().getGL2();
 
-		gl.glLineWidth(1);
-		gl.glPointSize(1f);
+		gl2.glClearColor(1, 1, 1, 1);
+		gl2.setSwapInterval(0);
 
-		//gl.glDisable(gl.GL_DEPTH_TEST);
+		// Other stuff from before
+		gl2.glLineWidth(3);
+		gl2.glPointSize(3f);
+		gl2.glEnable(GL2.GL_BLEND);
+		gl2.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+		gl2.glEnable(GL2.GL_POINT_SMOOTH);
+		gl2.glHint  (GL2.GL_POINT_SMOOTH_HINT,  GL2.GL_NICEST);
+		gl2.glEnable(GL2.GL_LINE_SMOOTH);
+		gl2.glHint  (GL2.GL_LINE_SMOOTH_HINT,   GL2.GL_NICEST);
+		gl2.glEnable(GL2.GL_POLYGON_SMOOTH); 
+		gl2.glHint  (GL2.GL_POLYGON_SMOOTH_HINT, GL2.GL_NICEST);
+	}
 
-		gl.glEnable(GL2.GL_BLEND);
-		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-		//gl.glBlendFunc(GL.GL_SRC_ALPHA_SATURATE, GL.GL_ONE_MINUS_SRC_ALPHA);
-		//gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);
-		gl.glEnable(GL2.GL_POINT_SMOOTH);
-		gl.glHint  (GL2.GL_POINT_SMOOTH_HINT,  GL2.GL_NICEST);
-		gl.glEnable(GL2.GL_LINE_SMOOTH);
-		gl.glHint  (GL2.GL_LINE_SMOOTH_HINT,   GL2.GL_NICEST);
-		gl.glEnable(GL2.GL_POLYGON_SMOOTH); 
-		gl.glHint  (GL2.GL_POLYGON_SMOOTH_HINT, GL2.GL_NICEST);
+	public void display(GLAutoDrawable glDrawable) {
+		GL2 gl2 = glDrawable.getGL().getGL2();
+		// clear screen
+		gl2.glClearColor(1,1,1,1);
+		gl2.glClear(GL2.GL_COLOR_BUFFER_BIT);
+
+		gl2.glBegin(GL2.GL_LINE_LOOP);
+		gl2.glColor4f(0,0,0,1);
+
+		gl2.glVertex2d(0, 0);
+		gl2.glVertex2d(0, Constants.HEIGHT);
+		gl2.glVertex2d(Constants.WIDTH, Constants.HEIGHT);
+		gl2.glVertex2d(Constants.WIDTH, 0);
+
+		gl2.glEnd();
+
+		gl2.glBegin(GL2.GL_POINTS);
+		gl2.glColor4f(1,0,0,1);
+		for(Vector2 v : points) {
+			gl2.glVertex2d(v.x, v.y);
+		}
+		gl2.glEnd();
+
+		fractureSystem.display(gl2);
+
+		long time = System.currentTimeMillis();
+
+		if(simulate && time >= nextUpdateTime) {
+			this.update();
+			nextUpdateTime = time + Constants.DT_MILLIS;
+		}
+	}
+
+	public void update() {
+		fractureSystem.update(Constants.DT);
 	}
 
 	@Override
-	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
+	public void dispose(GLAutoDrawable arg0) {
+		// nothing doing
+	}
 
-		System.out.println("width="+width+", height="+height);
-		height = Math.max(height, 1); // avoid height=0;
+	@Override
+	public void reshape(GLAutoDrawable glDrawable, int x, int y, int width, int height) {
+		System.out.println("width = " + width + ", height = " + height);
+		GL2 gl = glDrawable.getGL().getGL2();
+		gl.glViewport(0,0,width,height);
 
-		GL2 gl = drawable.getGL().getGL2();
-		gl.glViewport(0,0,width,height);	
+		// Set 2D view
+		gl.glMatrixMode(GL2.GL_PROJECTION);
+		gl.glLoadIdentity();
 
-		/// SETUP ORTHOGRAPHIC PROJECTION AND MAPPING INTO UNIT CELL:
-		gl.glMatrixMode(GL2.GL_PROJECTION);	
-		gl.glLoadIdentity();			
-		orthoMap = new OrthoMap(width, height);//Hide grungy details in OrthoMap
+		orthoMap = new OrthoMap(width, height);
 		orthoMap.apply_glOrtho(gl);
 
-		/// GET READY TO DRAW:
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glLoadIdentity();
 	}
 
-	public static void main(String[] args) 
-	{
+	public SimulatorMain() {
+		fractureSystem = new FractureSystem();
+	}
+
+	public static void main(String[] args) {
 		try {
-			Simulator sim = new Simulator();
+			SimulatorMain sim = new SimulatorMain();
 			sim.start();
 
 		} catch(Exception e) {
@@ -188,10 +174,8 @@ public class Simulator implements GLEventListener {
 		}
 	}
 
-
 	class BuilderGUI implements MouseListener, MouseMotionListener, KeyListener
 	{
-		boolean simulate = false;
 
 		/** Current build task (or null) */
 		Task task;
@@ -208,8 +192,10 @@ public class Simulator implements GLEventListener {
 
 			/* Add new task buttons here, then add their functionality below. */
 			ButtonGroup      buttonGroup  = new ButtonGroup();
-			AbstractButton[] buttons      = { new JButton("Reset"),
-					new JToggleButton ("Drag object", false),
+			AbstractButton[] buttons      = { new JButton("Clear"),
+					new JToggleButton ("Drag", false),
+					new JToggleButton ("Create", false),
+					new JToggleButton ("Delete", false),
 			};
 
 			for(int i=0; i<buttons.length; i++) {
@@ -225,23 +211,11 @@ public class Simulator implements GLEventListener {
 			task = null; // Set default task here
 		}
 
-		/** Simulate then display particle system and any builder
-		 * adornments. */
-		void simulateAndDisplayScene(GL2 gl)
+		void writeFrame(GL2 gl)
 		{
-			/// TODO: make the system advance
-			if(simulate) {
-				rbs.advanceTime(DT);
-			}
-			// Draw particles, forces, etc.
-			rbs.display(gl);
-
 			if(simulate && frameExporter != null) {
 				frameExporter.writeFrame(gl);
 			}
-
-			// Display task if any
-			if(task != null) task.display(gl);
 		}
 
 		/**
@@ -271,28 +245,39 @@ public class Simulator implements GLEventListener {
 				if(cmd.equals("Reset")) {
 					if(task != null) {
 						task.reset();
-					}
-					else {
-						resetToRest(); // set task=null
+						task = null;
 					}
 				}
-				else if(cmd.equals("Drag object")) {
+				else if(cmd.equals("Drag")) {
 					task = new DragTask();
+				}
+				else if(cmd.equals("Create")) {
+					task = new CreateConvexTask();
+				}
+				else if(cmd.equals("Delete")) {
+					task = new DeleteTask();
 				}
 				else {
 					System.out.println("UNHANDLED ActionEvent: "+e);
 				}
 			}
-
-
 		}
+
+		private Vector2 temp = new Vector2();
 
 		// Methods required for the implementation of MouseListener
 		public void mouseEntered (MouseEvent e) { if(task!=null) task.mouseEntered(e);  }
 		public void mouseExited  (MouseEvent e) { if(task!=null) task.mouseExited(e);   }
 		public void mousePressed (MouseEvent e) { if(task!=null) task.mousePressed(e);  }
 		public void mouseReleased(MouseEvent e) { if(task!=null) task.mouseReleased(e); }
-		public void mouseClicked (MouseEvent e) { if(task!=null) task.mouseClicked(e);  }
+		public void mouseClicked (MouseEvent e) {
+
+			orthoMap.getPoint(e, temp);
+			System.out.println(temp);
+			if(task != null){
+				task.mouseClicked(e);
+			}
+		}
 
 		// Methods required for the implementation of MouseMotionListener
 		public void mouseDragged (MouseEvent e) { if(task!=null) task.mouseDragged(e);  }
@@ -356,54 +341,77 @@ public class Simulator implements GLEventListener {
 			/** Override to specify reset behavior during "escape" button
 			 * events, etc. */
 			abstract void reset();
-
 		}
-		
-		class PickTask extends Task {
 
-			@Override
-			void reset() {
+		class CreateConvexTask extends Task {
+
+			public void reset() {
 				taskSelector.resetToRest();
 			}
-			
-			protected Convex picked = null;
-			protected Point2d clickLoc = new Point2d();
-			protected Point2d orig_loc = new Point2d();
-			
+
 			public void mousePressed(MouseEvent e) {
-				orthoMap.getPoint2d(e, clickLoc);
-				picked = rbs.pickBody(clickLoc);
-				if(picked != null) {
-					orig_loc.set(picked.x);
+				if(e.getButton() == MouseEvent.BUTTON1) {
+					Vector2 point = new Vector2();
+					orthoMap.getPoint(e, point);
+					points.add(point);
+				}
+				else if(e.getButton() == MouseEvent.BUTTON3) {
+					createConvexFromPoints();
 				}
 			}
 		}
-		
+
+		abstract class PickTask extends Task {
+			protected ConvexPolygon picked = null;
+			protected Vector2 clicked = new Vector2();
+			protected Vector2 origLoc = new Vector2();
+			public void mousePressed(MouseEvent e) {
+				orthoMap.getPoint(e, clicked);
+				picked = fractureSystem.pickBody(clicked);
+				if(picked != null) {
+					origLoc.set(picked.getWorldCenter());
+				}
+			}
+
+			public void reset() {
+				taskSelector.resetToRest();
+			}
+		}
+
 		class DragTask extends PickTask {
-			
-			Point2d draggedLoc = new Point2d();
-			Vector2d diff = new Vector2d();
-			
+			protected Vector2 dragged = new Vector2();
+			protected Vector2 diff = new Vector2();
+
 			public void mousePressed(MouseEvent e) {
 				super.mousePressed(e);
 				if(picked != null) {
-					picked.setPinned(true);
+					picked.pin(clicked);
 				}
 			}
-			
+
 			public void mouseDragged(MouseEvent e) {
 				if(picked != null) {
-					orthoMap.getPoint2d(e, draggedLoc);
-					diff.sub(draggedLoc, clickLoc);
-					
-					picked.x.add(orig_loc, diff);
-					picked.x_star.add(orig_loc, diff);
+					orthoMap.getPoint(e, dragged);
+					diff.set(dragged).subtract(clicked);
+					dragged.set(origLoc).add(diff);
+					picked.setJointTarget(dragged);
 				}
 			}
-			
+
 			public void mouseReleased(MouseEvent e) {
 				if(picked != null) {
-					picked.setPinned(false);
+					System.out.println("unpinned");
+					picked.unpin();
+					picked = null;
+				}
+			}
+		}
+
+		class DeleteTask extends PickTask {
+			public void mousePressed(MouseEvent e) {
+				super.mousePressed(e);
+				if(picked != null) {
+					fractureSystem.removeConvex(picked);
 					picked = null;
 				}
 			}
@@ -461,5 +469,6 @@ public class Simulator implements GLEventListener {
 			nFrames += 1;
 		}
 	}
-
 }
+
+

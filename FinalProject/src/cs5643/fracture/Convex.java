@@ -134,7 +134,6 @@ public class Convex {
 	Point2d temp = new Point2d();
 	
 	public void display(GL2 gl) {
-
 		gl.glBegin(GL2.GL_POLYGON);
 		gl.glColor3f(0f, 0.2f, 0.8f);
 		for(Point2d p : points) {

@@ -21,7 +21,7 @@ public class NormalForce implements Force {
 	@Override
 	public void applyForce() {
 		for(Convex c : rbs.convexes) {
-			normal.set(0, 9.8);
+			normal.set(0, Constants.GRAVITY_FORCE);
 			contactX.clear();
 			contactY.clear();
 			for(Point2d p : c.getPoints()) {
@@ -41,7 +41,7 @@ public class NormalForce implements Force {
 				double randAngular = Constants.rdm.nextDouble() - 0.5;
 				c.torque += randAngular;
 			}
-			else if (numContacts == 2 && c.torque <= 1e-8) {
+			else if (numContacts == 2 && c.torque <= 1) {
 				c.angularVelocity = 0;
 			}
 		}
