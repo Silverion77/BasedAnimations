@@ -386,7 +386,7 @@ public class SimulatorMain implements GLEventListener {
 			public void mousePressed(MouseEvent e) {
 				super.mousePressed(e);
 				if(picked != null) {
-					fractureSystem.fractureConvex(picked);
+					fractureSystem.fractureConvex(picked, clicked);
 					picked = null;
 				}
 			}

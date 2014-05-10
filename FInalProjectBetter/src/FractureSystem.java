@@ -22,7 +22,7 @@ public class FractureSystem {
 		world = new World();
 		fractureMapWorld = new World();
 		
-		// TODO: Begin test stuff that we should delete
+		// TODO: test stuff that we should delete
 		
 		// Make some test shapes
 		Vector2 v1 = new Vector2(2,3);
@@ -56,7 +56,7 @@ public class FractureSystem {
 
 		ArrayList<ConvexPolygon> convs = new ArrayList<ConvexPolygon>();
 		ArrayList<Vector2> pts = new ArrayList<Vector2>();
-		// Make fracture map
+		// Make fracture map (4x4 cubes)
 		for(int x = 0; x < 4; x++) {
 			for(int y = 0; y < 4; y++) {
 				pts.clear();
@@ -111,7 +111,7 @@ public class FractureSystem {
 		return picked;
 	}
 	
-	public void fractureConvex(ConvexPolygon cp) {
+	public void fractureConvex(ConvexPolygon cp, Vector2 impactPoint) {
 		AABB box = cp.createAABB();
 		Vector2 lowerLeft = new Vector2(box.getMinX(), box.getMinY());
 		double maxSide = Math.max(box.getHeight(), box.getWidth());
@@ -122,6 +122,12 @@ public class FractureSystem {
 		removeConvex(cp);
 		for(ConvexPolygon piece : pieces) {
 			addConvex(piece);
+			piece.setLinearVelocity(cp.getLinearVelocity());
+			lowerLeft.set(piece.getWorldCenter()).subtract(impactPoint);
+			lowerLeft.normalize();
+			lowerLeft.multiply(Constants.EXPLOSION_IMPULSE * piece.getMass().getMass());
+			System.out.println(lowerLeft);
+			piece.applyImpulse(lowerLeft);
 		}
 	}
 	
@@ -144,8 +150,14 @@ public class FractureSystem {
 		world.updatev(dt);
 	}
 	
+//	private Vector2 displayPoint = new Vector2();
+	
 	public void display(GL2 gl) {
-		fractureMap.display(gl);
+//		fractureMap.display(gl);
+//		gl.glBegin(GL2.GL_POINTS);
+//		gl.glColor3f(1, 0, 0);
+//		gl.glVertex2d(displayPoint.x, displayPoint.y);
+//		gl.glEnd();
 		for(ConvexPolygon p : polygons) {
 			p.display(gl);
 		}

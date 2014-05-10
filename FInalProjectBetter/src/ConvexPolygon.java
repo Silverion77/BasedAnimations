@@ -88,6 +88,10 @@ public class ConvexPolygon extends Body {
 			gl.glVertex2d(v.x, v.y);
 		}
 		gl.glEnd();
+		
+		gl.glBegin(GL2.GL_POINTS);
+		gl.glVertex2d(this.getLocalCenter().x, this.getLocalCenter().y);
+		gl.glEnd();
 
 		// restore the old transform
 		gl.glPopMatrix();
