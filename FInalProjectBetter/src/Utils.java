@@ -66,6 +66,7 @@ public class Utils
 			}
 		}
 		for(Vector2 v : p2points) {
+			System.out.println(v);
 			if(p1.pointInPolygon(v)) {
 				points.add(v);
 			}

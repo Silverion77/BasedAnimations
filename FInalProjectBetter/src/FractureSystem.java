@@ -27,7 +27,7 @@ public class FractureSystem {
 		// Make some test shapes
 		Vector2 v1 = new Vector2(2,3);
 		Vector2 v2 = new Vector2(6,4);
-		Vector2 v3 = new Vector2(3,5);
+		Vector2 v3 = new Vector2(3,4.5);
 		Vector2 v4 = new Vector2(5,1);
 		Vector2 v5 = new Vector2(10,6);
 		Vector2 v6 = new Vector2(9,7);
@@ -53,39 +53,24 @@ public class FractureSystem {
 		
 		ConvexPolygon q = new ConvexPolygon(points2);
 		addConvex(q);
-		
-		// Make fracture map
-		Vector2 w1 = new Vector2(0, 0);
-		Vector2 w2 = new Vector2(1, 0);
-		Vector2 w3 = new Vector2(0.5, 0.5);
-		Vector2 w4 = new Vector2(0, 1);
-		Vector2 w5 = new Vector2(0.5, 1);
-		Vector2 w6 = new Vector2(1, 1);
-		
-		points.clear();
-		points.add(w1);
-		points.add(w2);
-		points.add(w3);
-		ConvexPolygon piece1 = new ConvexPolygon(points);
-		
-		points.clear();
-		points.add(w1);
-		points.add(w3);
-		points.add(w4);
-		points.add(w5);
-		ConvexPolygon piece2 = new ConvexPolygon(points);
-		
-		points.clear();
-		points.add(w2);
-		points.add(w3);
-		points.add(w5);
-		points.add(w6);
-		ConvexPolygon piece3 = new ConvexPolygon(points);
-		
+
 		ArrayList<ConvexPolygon> convs = new ArrayList<ConvexPolygon>();
-		convs.add(piece1);
-		convs.add(piece2);
-		convs.add(piece3);
+		ArrayList<Vector2> pts = new ArrayList<Vector2>();
+		// Make fracture map
+		for(int x = 0; x < 4; x++) {
+			for(int y = 0; y < 4; y++) {
+				pts.clear();
+				Vector2 downLeft = new Vector2(x * 0.25, y * 0.25);
+				Vector2 upLeft = new Vector2(x * 0.25, (y+1) * 0.25);
+				Vector2 downRight = new Vector2((x+1) * 0.25, y * 0.25);
+				Vector2 upRight = new Vector2((x+1) * 0.25, (y+1) * 0.25);
+				pts.add(downLeft);
+				pts.add(downRight);
+				pts.add(upLeft);
+				pts.add(upRight);
+				convs.add(new ConvexPolygon(pts));
+			}
+		}
 		
 		fractureMap = new FractureMap(convs, true);
 		
@@ -134,6 +119,8 @@ public class FractureSystem {
 		
 		ArrayList<ConvexPolygon> pieces = shifted.fracture(cp, timesteps);
 		
+		fractureMap = shifted;
+		
 		removeConvex(cp);
 		for(ConvexPolygon piece : pieces) {
 			addConvex(piece);
@@ -160,6 +147,7 @@ public class FractureSystem {
 	}
 	
 	public void display(GL2 gl) {
+		fractureMap.display(gl);
 		for(ConvexPolygon p : polygons) {
 			p.display(gl);
 		}

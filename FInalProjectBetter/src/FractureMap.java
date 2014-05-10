@@ -50,8 +50,9 @@ public class FractureMap {
 		for(ConvexPolygon p : polygons) {
 			for(Vector2 v : p.getVerticesWorldSpace()) {
 				Vector2 copy_vec = v.copy();
-				copy_vec.multiply(scale);
+				copy_vec.multiply(scale + 2 * Constants.FRACTURE_PAD);
 				copy_vec.add(translate);
+				copy_vec.subtract(Constants.FRACTURE_PAD, Constants.FRACTURE_PAD);
 				temp_vecs.add(copy_vec);
 			}
 			ConvexPolygon copy = new ConvexPolygon(temp_vecs);

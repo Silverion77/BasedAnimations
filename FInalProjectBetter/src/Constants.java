@@ -7,6 +7,8 @@ public class Constants {
 	public static double HEIGHT = 10;
 	public static double WIDTH = 10.0 * 4.0 / 3.0;
 	
+	public static double FRACTURE_PAD = 0.1;
+	
 	public static Vector2 ZERO = new Vector2(0,0);
 	
 }
