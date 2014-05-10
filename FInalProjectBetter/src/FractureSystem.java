@@ -119,8 +119,6 @@ public class FractureSystem {
 		
 		ArrayList<ConvexPolygon> pieces = shifted.fracture(cp, timesteps);
 		
-		fractureMap = shifted;
-		
 		removeConvex(cp);
 		for(ConvexPolygon piece : pieces) {
 			addConvex(piece);

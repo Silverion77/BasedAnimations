@@ -103,7 +103,7 @@ public class ConvexPolygon extends Body {
 	}
 
 	public boolean pointInPolygon(Vector2 v) {
-		return polygon.contains(v);
+		return polygon.contains(v, this.transform);
 	}
 
 	public void pin(Vector2 v) {

@@ -65,11 +65,19 @@ public class Utils
 				points.add(v);
 			}
 		}
+		int p1num = points.size();
+		if(p1num == p1points.length) {
+			return new ConvexPolygon(points);
+		}
 		for(Vector2 v : p2points) {
 			System.out.println(v);
 			if(p1.pointInPolygon(v)) {
 				points.add(v);
 			}
+		}
+		int p2num = points.size() - p1num;
+		if(p2num == p2points.length) {
+			return new ConvexPolygon(points);
 		}
 		for(int i = 0; i < p1points.length; i++) {
 			int next_i = (i+1) % p1points.length;
