@@ -6,93 +6,117 @@ import javax.media.opengl.GL2;
 
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.joint.MouseJoint;
-import org.dyn4j.geometry.Mass;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
 
 public class ConvexPolygon extends Body {
-	
+
 	private Polygon polygon;
 	private float[] color;
-	
-	private boolean pinned = false;
-	
-	private Mass infinite;
-	
-	private MouseJoint mouseJoint = null;
-	
-	public ConvexPolygon(ArrayList<Vector2> points) {
 
-		color = new float[4];
-		
-		// Randomly color polygons
-        this.color[0] = (float)Math.random() * 0.5f + 0.5f;
-        this.color[1] = (float)Math.random() * 0.5f + 0.5f;
-        this.color[2] = (float)Math.random() * 0.5f + 0.5f;
-        this.color[3] = 1.0f;
-		
+	private boolean pinned = false;
+
+	private MouseJoint mouseJoint = null;
+
+	public ConvexPolygon(ArrayList<Vector2> points) {
 		ArrayList<Vector2> borderPoints = makeHullFromPoints(points);
 		polygon = new Polygon(borderPoints.toArray(new Vector2[0]));
+		setupPolygon(polygon);
+	}
+
+	public ConvexPolygon(Polygon p) {
+		setupPolygon(p);
+	}
+
+	private Vector2[] worldVertices = null;
+	private long timestamp;
+
+	public Vector2[] getVerticesWorldSpace(long time) {
+		if(worldVertices == null || time > timestamp) {
+			worldVertices = getVerticesWorldSpace();
+			timestamp = time;
+		}
+		return worldVertices;
+	}
+
+	public Vector2[] getVerticesWorldSpace() {
+		Vector2[] local = polygon.getVertices();
+		Vector2[] world = new Vector2[local.length];
+		for(int i = 0; i < world.length; i++) {
+			world[i] = this.getWorldPoint(local[i]);
+		}
+		return world;
+	}
+	
+	public Vector2[] getVertices() {
+		return polygon.getVertices();
+	}
+
+	public void setupPolygon(Polygon p) {
+		color = new float[4];
+		// Randomly color polygons
+		this.color[0] = (float)Math.random() * 0.5f + 0.5f;
+		this.color[1] = (float)Math.random() * 0.5f + 0.5f;
+		this.color[2] = (float)Math.random() * 0.5f + 0.5f;
+		this.color[3] = 1.0f;
 		this.addFixture(polygon, 1);
 		this.setMass();
-		
-		infinite = new Mass(this.getMass());
-		infinite.setType(Mass.Type.INFINITE);
+		worldVertices = new Vector2[polygon.getVertices().length];
 	}
-	
+
 	public void display(GL2 gl) {
-        // save the original transform
-        gl.glPushMatrix();
-       
-        // transform the coordinate system from world coordinates to local coordinates  
-        gl.glTranslated(this.transform.getTranslationX(), this.transform.getTranslationY(), 0.0);
-        // rotate about the z-axis
-        gl.glRotated(Math.toDegrees(this.transform.getRotation()), 0.0, 0.0, 1.0);
-        
-        gl.glColor4fv(this.color, 0);
-        
-        gl.glBegin(GL2.GL_POLYGON);
-        for (Vector2 v : polygon.getVertices()) {
-        	gl.glVertex2d(v.x, v.y);
-        }
-        gl.glEnd();
-        
-        gl.glColor3f(0, 0, 0);
-        
-        gl.glBegin(GL2.GL_LINE_LOOP);
-        for (Vector2 v : polygon.getVertices()) {
-        	gl.glVertex2d(v.x, v.y);
-        }
-        gl.glEnd();
-        
-        // restore the old transform
-        gl.glPopMatrix();
+		// save the original transform
+		gl.glPushMatrix();
+
+		// transform the coordinate system from world coordinates to local coordinates  
+		gl.glTranslated(this.transform.getTranslationX(), this.transform.getTranslationY(), 0.0);
+		// rotate about the z-axis
+		gl.glRotated(Math.toDegrees(this.transform.getRotation()), 0.0, 0.0, 1.0);
+
+		gl.glColor4fv(this.color, 0);
+
+		gl.glBegin(GL2.GL_POLYGON);
+		for (Vector2 v : polygon.getVertices()) {
+			gl.glVertex2d(v.x, v.y);
+		}
+		gl.glEnd();
+
+		gl.glColor3f(0, 0, 0);
+
+		gl.glBegin(GL2.GL_LINE_LOOP);
+		for (Vector2 v : polygon.getVertices()) {
+			gl.glVertex2d(v.x, v.y);
+		}
+		gl.glEnd();
+
+		// restore the old transform
+		gl.glPopMatrix();
 	}
-	
+
 	public boolean isPinned() {
 		return pinned;
 	}
-	
+
 	public void setPosition(double x, double y) {
 		this.translateToOrigin();
 		this.translate(x,y);
 	}
-	
+
 	public boolean pointInPolygon(Vector2 v) {
 		return polygon.contains(v);
 	}
-	
+
 	public void pin(Vector2 v) {
 		pinned = true;
 		mouseJoint = new MouseJoint(this, this.getWorldCenter(), 2, 0.5, 200000);
 		mouseJoint.setTarget(v);
 		this.getWorld().addJoint(mouseJoint);
 	}
-	
+
 	public void setJointTarget(Vector2 v) {
 		mouseJoint.setTarget(v);
 	}
-	
+
 	public void unpin() {
 		pinned = false;
 		this.getWorld().removeJoint(mouseJoint);
@@ -110,11 +134,11 @@ public class ConvexPolygon extends Body {
 	public static double ccw(Vector2 p1, Vector2 p2, Vector2 p3) {
 		return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
 	}
-	
+
 	private static ArrayList<Vector2> upper = new ArrayList<Vector2>();
 	private static ArrayList<Vector2> lower = new ArrayList<Vector2>();
 	private static PointSorter sorter = new PointSorter();
-	
+
 	/**
 	 * Implements the monotone chain algorithm for computing a convex hull from
 	 * a set of points.
@@ -140,8 +164,12 @@ public class ConvexPolygon extends Body {
 			}
 			upper.add(pointSet.get(i));
 		}
-		lower.remove(lower.size() - 1);
-		upper.remove(upper.size() - 1);
+		if(lower.size() > 0) {
+			lower.remove(lower.size() - 1);
+		}
+		if(upper.size() > 0) {
+			upper.remove(upper.size() - 1);
+		}
 		lower.addAll(upper);
 		return lower;
 	}

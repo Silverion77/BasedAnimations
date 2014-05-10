@@ -196,6 +196,7 @@ public class SimulatorMain implements GLEventListener {
 					new JToggleButton ("Drag", false),
 					new JToggleButton ("Create", false),
 					new JToggleButton ("Delete", false),
+					new JToggleButton ("Fracture", false),
 			};
 
 			for(int i=0; i<buttons.length; i++) {
@@ -256,6 +257,9 @@ public class SimulatorMain implements GLEventListener {
 				}
 				else if(cmd.equals("Delete")) {
 					task = new DeleteTask();
+				}
+				else if(cmd.equals("Fracture")) {
+					task = new FractureTask();
 				}
 				else {
 					System.out.println("UNHANDLED ActionEvent: "+e);
@@ -375,6 +379,16 @@ public class SimulatorMain implements GLEventListener {
 
 			public void reset() {
 				taskSelector.resetToRest();
+			}
+		}
+		
+		class FractureTask extends PickTask {
+			public void mousePressed(MouseEvent e) {
+				super.mousePressed(e);
+				if(picked != null) {
+					fractureSystem.fractureConvex(picked);
+					picked = null;
+				}
 			}
 		}
 
