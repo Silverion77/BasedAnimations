@@ -23,6 +23,7 @@ public class SimulatorMain implements GLEventListener {
 	private OrthoMap orthoMap;
 
 	private JFrame frame;
+	private JFrame fracFrame;
 	private FrameExporter frameExporter;
 	private BuilderGUI gui;
 	private boolean simulate;
@@ -36,6 +37,7 @@ public class SimulatorMain implements GLEventListener {
 		gui = new BuilderGUI();
 
 		frame = new JFrame("CS5643 Fracture Simulator");
+		fracFrame = new JFrame("CS5643 Fracture Map");
 		GLProfile glp = GLProfile.getDefault();
 		GLCapabilities glc = new GLCapabilities(glp);
 		GLCanvas canvas = new GLCanvas(glc);
@@ -222,6 +224,9 @@ public class SimulatorMain implements GLEventListener {
 					new JToggleButton ("Drag", false),
 					new JToggleButton ("Create (Convex)", false),
 					new JToggleButton ("Create (Welded)", false),
+					new JToggleButton ("Create (Map)", false),
+					new JButton("Next Map"),
+					new JButton("Previous Map"),
 					new JToggleButton ("Delete", false),
 					new JToggleButton ("Fracture", false),
 			};
@@ -284,6 +289,15 @@ public class SimulatorMain implements GLEventListener {
 				}
 				else if(cmd.equals("Create (Welded)")) {
 					task = new CreateWeldedTask();
+				}
+				else if(cmd.equals("Create (Map)")) {
+					task = new CreateFractureMapTask();
+				}
+				else if(cmd.equals("Next Map")) {
+					fractureSystem.nextMap();
+				}
+				else if(cmd.equals("Previous Map")) {
+					fractureSystem.previousMap();
 				}
 				else if(cmd.equals("Delete")) {
 					task = new DeleteTask();
@@ -412,7 +426,14 @@ public class SimulatorMain implements GLEventListener {
 			}
 
 		}
-
+		
+		class CreateFractureMapTask extends Task {
+			
+			public void reset() {
+				taskSelector.resetToRest();
+			}
+		}
+		
 		abstract class PickTask extends Task {
 			protected Fracturable picked = null;
 			protected Vector2 clicked = new Vector2();

@@ -18,7 +18,8 @@ public class FractureSystem {
 	
 	private ConvexPolygon p1, p2;
 
-	private FractureMap fractureMap;
+	private ArrayList<FractureMap> fractureMaps;
+	public int currentMap = 0;
 
 	public FractureSystem() {
 		polygons = new ArrayList<ConvexPolygon>();
@@ -79,8 +80,9 @@ public class FractureSystem {
 				convs.add(new ConvexPolygon(pts));
 			}
 		}
-
-		fractureMap = new FractureMap(convs, true);
+		
+		fractureMaps = new ArrayList<FractureMap>();
+		fractureMaps.add(new FractureMap(convs, true));
 
 		// TODO: End of test stuff to remove
 
@@ -107,6 +109,17 @@ public class FractureSystem {
 		Body rightWall = new Body();
 		rightWall.addFixture(right);
 		world.addBody(rightWall);
+	}
+	
+	public void nextMap() {
+		currentMap = (currentMap + 1) % fractureMaps.size();
+	}
+	
+	public void previousMap() {
+		if (currentMap == 0)
+			currentMap = fractureMaps.size() - 1;
+		else
+			currentMap--;
 	}
 
 	public Fracturable pickBody(Vector2 point) {
@@ -137,7 +150,7 @@ public class FractureSystem {
 		AABB box = cp.createAABB();
 		Vector2 lowerLeft = new Vector2(box.getMinX(), box.getMinY());
 		double maxSide = Math.max(box.getHeight(), box.getWidth());
-		FractureMap shifted = fractureMap.translateAndScale(lowerLeft, maxSide);
+		FractureMap shifted = fractureMaps.get(currentMap).translateAndScale(lowerLeft, maxSide);
 		ArrayList<Polygon> pieces = shifted.fracture(cp);
 		removeConvex(cp);
 		ArrayList<Polygon> uncut = new ArrayList<Polygon>();
@@ -229,7 +242,7 @@ public class FractureSystem {
 	}
 
 	public void display(GL2 gl) {
-		fractureMap.display(gl);
+		fractureMaps.get(currentMap).display(gl);
 		for(ConvexPolygon p : polygons) {
 			p.display(gl);
 		}
