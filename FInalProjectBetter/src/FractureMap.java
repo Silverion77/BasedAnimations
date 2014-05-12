@@ -4,17 +4,18 @@ import javax.media.opengl.GL2;
 
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Mass;
+import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
 
 public class FractureMap {
 
 	private ConvexPolygon[] polygons;
-	private ArrayList<ConvexPolygon> temp_polys;
+	private ArrayList<Polygon> temp_polys;
 	private World mapWorld;
 
 	public FractureMap(ArrayList<ConvexPolygon> ps, boolean baseMap) {
 		polygons = ps.toArray(new ConvexPolygon[0]);
-		temp_polys = new ArrayList<ConvexPolygon>();
+		temp_polys = new ArrayList<Polygon>();
 		mapWorld = new World();
 
 		double min_x = Double.POSITIVE_INFINITY;
@@ -44,7 +45,7 @@ public class FractureMap {
 
 	private ArrayList<Vector2> temp_vecs = new ArrayList<Vector2>();
 
-	public FractureMap translateAndScale(Vector2 translate, double scale, long time) {
+	public FractureMap translateAndScale(Vector2 translate, double scale) {
 		temp_vecs.clear();
 		ArrayList<ConvexPolygon> copies = new ArrayList<ConvexPolygon>();
 		for(ConvexPolygon p : polygons) {
@@ -63,12 +64,12 @@ public class FractureMap {
 		return other;
 	}
 
-	public ArrayList<ConvexPolygon> fracture(ConvexPolygon p, long time) {
+	public ArrayList<Polygon> fracture(ConvexPolygon p) {
 		temp_polys.clear();
 		for(ConvexPolygon mapPoly : polygons) {
-			ConvexPolygon inters = Utils.intersect(p, mapPoly, time);
-			if(inters != null) {
-				temp_polys.add(inters);
+			Polygon pol = Utils.intersect(p.getPolygon(), p.getTransform(), mapPoly);
+			if(pol != null) {
+				temp_polys.add(pol);
 			}
 		}
 		return temp_polys;

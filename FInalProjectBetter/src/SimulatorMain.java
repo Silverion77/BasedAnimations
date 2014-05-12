@@ -1,12 +1,17 @@
 import java.awt.GridLayout;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.media.opengl.*;
 import javax.media.opengl.awt.GLCanvas;
 import javax.swing.*;
 
+import org.dyn4j.dynamics.Body;
+import org.dyn4j.geometry.Convex;
+import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.geometry.decompose.SweepLine;
 
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLReadBufferUtil;
@@ -80,6 +85,27 @@ public class SimulatorMain implements GLEventListener {
 			points.clear();
 		}
 	}
+	private ArrayList<Vector2> temp = new ArrayList<Vector2>();
+
+	public void createTriangulationFromPoints() {
+		if(points.size() < 3) {
+			points.clear();
+			return;
+		}
+		List<Convex> convexes = new SweepLine().decompose(points.toArray(new Vector2[0]));
+		WeldedPolygon wp = new WeldedPolygon();
+		for(Convex c : convexes) {
+			temp.clear();
+			Polygon p = (Polygon)c;
+			for(Vector2 v : p.getVertices()) {
+				temp.add(v);
+			}
+			Polygon poly = new Polygon(temp.toArray(new Vector2[0]));
+			wp.addPiece(poly);
+		}
+		fractureSystem.addWelded(wp);
+		points.clear();
+	}
 
 	public void init(GLAutoDrawable glDrawable) {
 		GL2 gl2 = glDrawable.getGL().getGL2();
@@ -89,7 +115,7 @@ public class SimulatorMain implements GLEventListener {
 
 		// Other stuff from before
 		gl2.glLineWidth(3);
-		gl2.glPointSize(3f);
+		gl2.glPointSize(12f);
 		gl2.glEnable(GL2.GL_BLEND);
 		gl2.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
 		gl2.glEnable(GL2.GL_POINT_SMOOTH);
@@ -194,7 +220,8 @@ public class SimulatorMain implements GLEventListener {
 			ButtonGroup      buttonGroup  = new ButtonGroup();
 			AbstractButton[] buttons      = { new JButton("Clear"),
 					new JToggleButton ("Drag", false),
-					new JToggleButton ("Create", false),
+					new JToggleButton ("Create (Convex)", false),
+					new JToggleButton ("Create (Welded)", false),
 					new JToggleButton ("Delete", false),
 					new JToggleButton ("Fracture", false),
 			};
@@ -252,8 +279,11 @@ public class SimulatorMain implements GLEventListener {
 				else if(cmd.equals("Drag")) {
 					task = new DragTask();
 				}
-				else if(cmd.equals("Create")) {
+				else if(cmd.equals("Create (Convex)")) {
 					task = new CreateConvexTask();
+				}
+				else if(cmd.equals("Create (Welded)")) {
+					task = new CreateWeldedTask();
 				}
 				else if(cmd.equals("Delete")) {
 					task = new DeleteTask();
@@ -277,7 +307,6 @@ public class SimulatorMain implements GLEventListener {
 		public void mouseClicked (MouseEvent e) {
 
 			orthoMap.getPoint(e, temp);
-			System.out.println(temp);
 			if(task != null){
 				task.mouseClicked(e);
 			}
@@ -365,8 +394,27 @@ public class SimulatorMain implements GLEventListener {
 			}
 		}
 
+		class CreateWeldedTask extends Task {
+
+			public void reset() {
+				taskSelector.resetToRest();
+			}
+
+			public void mousePressed(MouseEvent e) {
+				if(e.getButton() == MouseEvent.BUTTON1) {
+					Vector2 point = new Vector2();
+					orthoMap.getPoint(e, point);
+					points.add(point);
+				}
+				else if(e.getButton() == MouseEvent.BUTTON3) {
+					createTriangulationFromPoints();
+				}
+			}
+
+		}
+
 		abstract class PickTask extends Task {
-			protected ConvexPolygon picked = null;
+			protected Fracturable picked = null;
 			protected Vector2 clicked = new Vector2();
 			protected Vector2 origLoc = new Vector2();
 			public void mousePressed(MouseEvent e) {
@@ -381,13 +429,16 @@ public class SimulatorMain implements GLEventListener {
 				taskSelector.resetToRest();
 			}
 		}
-		
+
 		class FractureTask extends PickTask {
 			public void mousePressed(MouseEvent e) {
 				super.mousePressed(e);
 				if(picked != null) {
-					fractureSystem.fractureConvex(picked, clicked);
-					picked = null;
+					if(picked instanceof ConvexPolygon) {
+						ConvexPolygon pickedConvex = (ConvexPolygon)picked;
+						fractureSystem.fractureConvex(pickedConvex, clicked);
+						picked = null;
+					}
 				}
 			}
 		}
@@ -414,7 +465,6 @@ public class SimulatorMain implements GLEventListener {
 
 			public void mouseReleased(MouseEvent e) {
 				if(picked != null) {
-					System.out.println("unpinned");
 					picked.unpin();
 					picked = null;
 				}
@@ -425,7 +475,7 @@ public class SimulatorMain implements GLEventListener {
 			public void mousePressed(MouseEvent e) {
 				super.mousePressed(e);
 				if(picked != null) {
-					fractureSystem.removeConvex(picked);
+					fractureSystem.remove(picked);
 					picked = null;
 				}
 			}

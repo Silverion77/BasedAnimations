@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 import javax.media.opengl.GL2;
 
@@ -9,14 +10,11 @@ import org.dyn4j.dynamics.joint.MouseJoint;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
 
-public class ConvexPolygon extends Body {
+public class ConvexPolygon extends Fracturable {
 
 	private Polygon polygon;
+	private ArrayList<Polygon> lst = new ArrayList<Polygon>();
 	private float[] color;
-
-	private boolean pinned = false;
-
-	private MouseJoint mouseJoint = null;
 
 	public ConvexPolygon(ArrayList<Vector2> points) {
 		ArrayList<Vector2> borderPoints = makeHullFromPoints(points);
@@ -25,6 +23,7 @@ public class ConvexPolygon extends Body {
 	}
 
 	public ConvexPolygon(Polygon p) {
+		polygon = p;
 		setupPolygon(p);
 	}
 
@@ -61,7 +60,15 @@ public class ConvexPolygon extends Body {
 		this.color[3] = 1.0f;
 		this.addFixture(polygon, 1);
 		this.setMass();
+		lst.add(polygon);
 		worldVertices = new Vector2[polygon.getVertices().length];
+	}
+	
+	public void setColor(float f1, float f2, float f3, float f4) {
+		this.color[0] = f1;
+		this.color[1] = f2;
+		this.color[2] = f3;
+		this.color[3] = f4;
 	}
 
 	public void display(GL2 gl) {
@@ -89,42 +96,13 @@ public class ConvexPolygon extends Body {
 		}
 		gl.glEnd();
 		
-		gl.glBegin(GL2.GL_POINTS);
-		gl.glVertex2d(this.getLocalCenter().x, this.getLocalCenter().y);
-		gl.glEnd();
+		// Draw centroid
+//		gl.glBegin(GL2.GL_POINTS);
+//		gl.glVertex2d(this.getLocalCenter().x, this.getLocalCenter().y);
+//		gl.glEnd();
 
 		// restore the old transform
 		gl.glPopMatrix();
-	}
-
-	public boolean isPinned() {
-		return pinned;
-	}
-
-	public void setPosition(double x, double y) {
-		this.translateToOrigin();
-		this.translate(x,y);
-	}
-
-	public boolean pointInPolygon(Vector2 v) {
-		return polygon.contains(v, this.transform);
-	}
-
-	public void pin(Vector2 v) {
-		pinned = true;
-		mouseJoint = new MouseJoint(this, this.getWorldCenter(), 2, 0.5, 200000);
-		mouseJoint.setTarget(v);
-		this.getWorld().addJoint(mouseJoint);
-	}
-
-	public void setJointTarget(Vector2 v) {
-		mouseJoint.setTarget(v);
-	}
-
-	public void unpin() {
-		pinned = false;
-		this.getWorld().removeJoint(mouseJoint);
-		mouseJoint = null;
 	}
 
 	/**
@@ -176,6 +154,14 @@ public class ConvexPolygon extends Body {
 		}
 		lower.addAll(upper);
 		return lower;
+	}
+	
+	public Polygon getPolygon() {
+		return polygon;
+	}
+	
+	public List<Polygon> polygonsWithinR(double r, Vector2 p) {
+		return lst;
 	}
 }
 
