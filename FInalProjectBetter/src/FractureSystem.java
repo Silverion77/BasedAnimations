@@ -186,6 +186,7 @@ public class FractureSystem {
 		for (WeldedPolygon welded : WeldedPolygon.splitIslands(unfractured)) {
 			addWelded(welded);
 			welded.rotate(wp.getTransform().getRotation());
+			welded.translate(wp.getTransform().getTranslation());
 			welded.setLinearVelocity(wp.getLinearVelocity());
 			lowerLeft.set(welded.getWorldCenter()).subtract(impactPoint);
 			lowerLeft.normalize();
