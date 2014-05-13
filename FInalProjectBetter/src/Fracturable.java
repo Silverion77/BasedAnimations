@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 
 import org.dyn4j.dynamics.Body;
@@ -33,5 +34,5 @@ public abstract class Fracturable extends Body {
 		mouseJoint = null;
 	}
 	
-	public abstract List<Polygon> polygonsWithinR(double r, Vector2 point);		
+	public abstract void polygonsWithinR(double r, Vector2 point, ArrayList<Polygon> within, ArrayList<Polygon> outside);		
 }

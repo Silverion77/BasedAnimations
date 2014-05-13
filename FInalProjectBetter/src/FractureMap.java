@@ -5,6 +5,7 @@ import javax.media.opengl.GL2;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Mass;
 import org.dyn4j.geometry.Polygon;
+import org.dyn4j.geometry.Transform;
 import org.dyn4j.geometry.Vector2;
 
 public class FractureMap {
@@ -63,16 +64,20 @@ public class FractureMap {
 		FractureMap other = new FractureMap(copies, false);
 		return other;
 	}
-
-	public ArrayList<Polygon> fracture(ConvexPolygon p) {
+	
+	public ArrayList<Polygon> fracture(Polygon p, Transform t) {
 		temp_polys.clear();
 		for(ConvexPolygon mapPoly : polygons) {
-			Polygon pol = Utils.intersect(p.getPolygon(), p.getTransform(), mapPoly);
+			Polygon pol = Utils.intersect(p, t, mapPoly);
 			if(pol != null) {
 				temp_polys.add(pol);
 			}
 		}
 		return temp_polys;
+	}
+
+	public ArrayList<Polygon> fracture(ConvexPolygon p) {
+		return fracture(p.getPolygon(), p.getTransform());
 	}
 	
 	public void printPoints() {

@@ -13,7 +13,6 @@ import org.dyn4j.geometry.Vector2;
 public class ConvexPolygon extends Fracturable {
 
 	private Polygon polygon;
-	private ArrayList<Polygon> lst = new ArrayList<Polygon>();
 	private float[] color;
 
 	public ConvexPolygon(ArrayList<Vector2> points) {
@@ -60,7 +59,6 @@ public class ConvexPolygon extends Fracturable {
 		this.color[3] = 1.0f;
 		this.addFixture(polygon, 1);
 		this.setMass();
-		lst.add(polygon);
 		worldVertices = new Vector2[polygon.getVertices().length];
 	}
 	
@@ -160,8 +158,8 @@ public class ConvexPolygon extends Fracturable {
 		return polygon;
 	}
 	
-	public List<Polygon> polygonsWithinR(double r, Vector2 p) {
-		return lst;
+	public void polygonsWithinR(double r, Vector2 p, ArrayList<Polygon> within, ArrayList<Polygon> outside) {
+		within.add(polygon);
 	}
 }
 

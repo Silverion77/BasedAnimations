@@ -275,11 +275,12 @@ public class SimulatorMain implements GLEventListener {
 				String cmd = e.getActionCommand();
 				System.out.println(cmd);
 
-				if(cmd.equals("Reset")) {
+				if(cmd.equals("Clear")) {
 					if(task != null) {
 						task.reset();
 						task = null;
 					}
+					fractureSystem.clear();
 				}
 				else if(cmd.equals("Drag")) {
 					task = new DragTask();
@@ -458,6 +459,10 @@ public class SimulatorMain implements GLEventListener {
 					if(picked instanceof ConvexPolygon) {
 						ConvexPolygon pickedConvex = (ConvexPolygon)picked;
 						fractureSystem.fractureConvex(pickedConvex, clicked);
+						picked = null;
+					}
+					else {
+						fractureSystem.fracture(picked, clicked);
 						picked = null;
 					}
 				}

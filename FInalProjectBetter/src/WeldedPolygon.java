@@ -107,17 +107,16 @@ public class WeldedPolygon extends Fracturable {
 		gl.glPopMatrix();
 	}
 	
-	private ArrayList<Polygon> tempList = new ArrayList<Polygon>();
-
 	@Override
-	public List<Polygon> polygonsWithinR(double r, Vector2 point) {
-		tempList.clear();
+	public void polygonsWithinR(double r, Vector2 point, ArrayList<Polygon> within, ArrayList<Polygon> outside) {
 		Vector2 local = this.getLocalPoint(point);
 		for(Polygon p : pieces) {
 			if(Utils.distancePointToPolygon(p, local) <= r) {
-				tempList.add(p);
+				within.add(p);
+			}
+			else {
+				outside.add(p);
 			}
 		}
-		return tempList;
 	}
 }
