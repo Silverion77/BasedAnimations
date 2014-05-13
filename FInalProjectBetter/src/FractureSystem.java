@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Random;
 
 import javax.media.opengl.GL2;
 
@@ -11,6 +12,7 @@ import org.dyn4j.geometry.Vector2;
 
 public class FractureSystem {
 
+	private Random rng;
 	private World world;
 	private ArrayList<ConvexPolygon> polygons;
 	private ArrayList<WeldedPolygon> weldedPolygons;
@@ -22,6 +24,7 @@ public class FractureSystem {
 		polygons = new ArrayList<ConvexPolygon>();
 		weldedPolygons = new ArrayList<WeldedPolygon>();
 		world = new World();
+		rng = new Random();
 
 		// TODO: test stuff that we should delete
 
@@ -54,11 +57,18 @@ public class FractureSystem {
 
 		ConvexPolygon q = new ConvexPolygon(points2);
 		addConvex(q);
+		
+		fractureMaps = new ArrayList<FractureMap>();
+		fractureMaps.add(makeRandomFractureMap(10));
 
+		// TODO: End of test stuff to remove
+		addWalls();
+	}
+	
+	public FractureMap makeCubesFractureMap(int numCubes) {
 		ArrayList<ConvexPolygon> convs = new ArrayList<ConvexPolygon>();
 		ArrayList<Vector2> pts = new ArrayList<Vector2>();
 
-		int numCubes = 5;
 		double cubeLength = 1.0 / numCubes;
 		// Make fracture map (4x4 cubes)
 		for(int x = 0; x < numCubes; x++) {
@@ -75,12 +85,16 @@ public class FractureSystem {
 				convs.add(new ConvexPolygon(pts));
 			}
 		}
-		
-		fractureMaps = new ArrayList<FractureMap>();
-		fractureMaps.add(new FractureMap(convs, true));
-
-		// TODO: End of test stuff to remove
-		addWalls();
+		return new FractureMap(convs, true);
+	}
+	
+	public FractureMap makeRandomFractureMap(int numPoints) {
+		ArrayList<Vector2> pts = new ArrayList<Vector2>();
+		for(int i = 0; i < numPoints; i++) {
+			Vector2 randVec = new Vector2(rng.nextDouble(), rng.nextDouble());
+			pts.add(randVec);
+		}
+		return ChrisVoronoiCalculation.generateVoronoi(pts);
 	}
 	
 	public void addWalls() {
@@ -157,10 +171,6 @@ public class FractureSystem {
 	ArrayList<Polygon> fractured_pieces = new ArrayList<Polygon>();
 	
 	public void fracture(Fracturable wp, Vector2 impactPoint) {
-		AABB box = wp.createAABB();
-		Vector2 lowerLeft = new Vector2(box.getMinX(), box.getMinY());
-		double maxSide = Math.max(box.getHeight(), box.getWidth());
-		FractureMap shifted = fractureMaps.get(currentMap).translateAndScale(lowerLeft, maxSide);
 		
 		fractured.clear();
 		unfractured.clear();
@@ -169,6 +179,25 @@ public class FractureSystem {
 		fuse_back.clear();
 		
 		wp.polygonsWithinR(Constants.IMPACT_RADIUS, impactPoint, fractured, unfractured);
+		
+		AABB box = null;
+		
+		for(Polygon p : fractured) {
+			if(box == null) {
+				box = p.createAABB(wp.getTransform());
+			}
+			else {
+				box.union(p.createAABB());
+			}
+		}
+		
+		Vector2 lowerLeft = new Vector2(impactPoint.x, impactPoint.y);
+		
+		double maxXDiff = Math.max(box.getMaxX() - impactPoint.x, impactPoint.x - box.getMinX());
+		double maxYDiff = Math.max(box.getMaxY() - impactPoint.y, impactPoint.y - box.getMinY());
+		double maxSide = Math.max(2 * maxXDiff, 2 * maxYDiff);
+		
+		FractureMap shifted = fractureMaps.get(currentMap).translateAndScale(lowerLeft, maxSide);
 		
 		for(Polygon p : fractured) {
 			temp.addAll(shifted.fracture(p, wp.getTransform()));
@@ -209,34 +238,6 @@ public class FractureSystem {
 			addWelded(welded);
 		}
 		remove(wp);
-	}
-
-	public void fractureConvex(ConvexPolygon cp, Vector2 impactPoint) {
-		AABB box = cp.createAABB();
-		Vector2 lowerLeft = new Vector2(box.getMinX(), box.getMinY());
-		double maxSide = Math.max(box.getHeight(), box.getWidth());
-		FractureMap shifted = fractureMaps.get(currentMap).translateAndScale(lowerLeft, maxSide);
-		ArrayList<Polygon> pieces = shifted.fracture(cp);
-		removeConvex(cp);
-		ArrayList<Polygon> uncut = new ArrayList<Polygon>();
-		for(Polygon piece : pieces) {
-			if(Utils.distancePointToPolygon(piece, impactPoint) > Constants.IMPACT_RADIUS) {
-				uncut.add(piece);
-			}
-			else {
-				ConvexPolygon conv = new ConvexPolygon(piece);
-				// TODO: fusing according to the cells
-				addConvex(conv);
-				conv.setLinearVelocity(cp.getLinearVelocity());
-				lowerLeft.set(conv.getWorldCenter()).subtract(impactPoint);
-				lowerLeft.normalize();
-				lowerLeft.multiply(Constants.EXPLOSION_IMPULSE * conv.getMass().getMass());
-				conv.applyImpulse(lowerLeft);
-			}
-		}
-		for(WeldedPolygon wp : WeldedPolygon.splitIslands(uncut)) {
-			addWelded(wp);
-		}
 	}
 	
 	public void addFractureMap(FractureMap fm) {
@@ -310,7 +311,7 @@ public class FractureSystem {
 	}
 
 	public void display(GL2 gl) {
-		fractureMaps.get(currentMap).display(gl);
+//		fractureMaps.get(currentMap).display(gl);
 		for(ConvexPolygon p : polygons) {
 			p.display(gl);
 		}

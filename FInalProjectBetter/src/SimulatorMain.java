@@ -10,6 +10,7 @@ import javax.swing.*;
 import org.dyn4j.geometry.Convex;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.geometry.decompose.Bayazit;
 import org.dyn4j.geometry.decompose.SweepLine;
 
 import com.jogamp.opengl.util.Animator;
@@ -94,7 +95,15 @@ public class SimulatorMain implements GLEventListener {
 			points.clear();
 			return;
 		}
-		List<Convex> convexes = new SweepLine().decompose(points.toArray(new Vector2[0]));
+		List<Convex> convexes;
+		try {
+			convexes = new Bayazit().decompose(points.toArray(new Vector2[0]));
+		}
+		catch (IllegalArgumentException e) {
+			System.err.println(e.getMessage());
+			points.clear();
+			return;
+		}
 		WeldedPolygon wp = new WeldedPolygon();
 		for(Convex c : convexes) {
 			temp.clear();
@@ -105,6 +114,7 @@ public class SimulatorMain implements GLEventListener {
 			Polygon poly = new Polygon(temp.toArray(new Vector2[0]));
 			wp.addPiece(poly);
 		}
+		wp.setMass();
 		fractureSystem.addWelded(wp);
 		points.clear();
 	}
@@ -144,14 +154,14 @@ public class SimulatorMain implements GLEventListener {
 
 		gl2.glEnd();
 
+		fractureSystem.display(gl2);
+
 		gl2.glBegin(GL2.GL_POINTS);
-		gl2.glColor4f(1,0,0,1);
+		gl2.glColor4f(0,1,0,1);
 		for(Vector2 v : points) {
 			gl2.glVertex2d(v.x, v.y);
 		}
 		gl2.glEnd();
-
-		fractureSystem.display(gl2);
 
 		long time = System.currentTimeMillis();
 
@@ -211,12 +221,12 @@ public class SimulatorMain implements GLEventListener {
 		JFrame guiFrame;
 		TaskSelector taskSelector = new TaskSelector();
 
-		BuilderGUI() 
+		public BuilderGUI() 
 		{
 			guiFrame = new JFrame("Tasks");
 			guiFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			guiFrame.setLayout(new SpringLayout());
-			guiFrame.setLayout(new GridLayout(6,1));
+			guiFrame.setLayout(new GridLayout(9,1));
 
 			/* Add new task buttons here, then add their functionality below. */
 			ButtonGroup      buttonGroup  = new ButtonGroup();
@@ -451,15 +461,8 @@ public class SimulatorMain implements GLEventListener {
 			public void mousePressed(MouseEvent e) {
 				super.mousePressed(e);
 				if(picked != null) {
-					if(picked instanceof ConvexPolygon) {
-						ConvexPolygon pickedConvex = (ConvexPolygon)picked;
-						fractureSystem.fractureConvex(pickedConvex, clicked);
-						picked = null;
-					}
-					else {
-						fractureSystem.fracture(picked, clicked);
-						picked = null;
-					}
+					fractureSystem.fracture(picked, clicked);
+					picked = null;
 				}
 			}
 		}
