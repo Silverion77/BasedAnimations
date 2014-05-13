@@ -120,6 +120,10 @@ public class FractureSystem {
 		else
 			currentMap--;
 	}
+	
+	public FractureMap getCurrentMap() {
+		return fractureMaps.get(currentMap);
+	}
 
 	public Fracturable pickBody(Vector2 point) {
 		Fracturable picked = null;
@@ -235,6 +239,10 @@ public class FractureSystem {
 		}
 	}
 	
+	public void addFractureMap(FractureMap fm) {
+		fractureMaps.add(fm);
+	}
+
 	public void addConvex(ArrayList<Vector2> points) {
 		addConvex(new ConvexPolygon(points));
 	}

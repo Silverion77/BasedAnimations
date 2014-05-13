@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.dyn4j.geometry.Polygon;
@@ -8,8 +7,8 @@ import org.dyn4j.geometry.Vector2;
 
 public class ChrisVoronoiCalculation {
 	
-	public static List<ConvexPolygon> generateVoronoi(List<Vector2> controlPts) {
-		List<ConvexPolygon> res = new LinkedList<ConvexPolygon>();
+	public static FractureMap generateVoronoi(List<Vector2> controlPts) {
+		ArrayList<ConvexPolygon> res = new ArrayList<ConvexPolygon>();
 		Vector2 ortho = new Vector2();
 		Vector2 midpt = new Vector2();
 		for (Vector2 pt : controlPts) {
@@ -27,7 +26,7 @@ public class ChrisVoronoiCalculation {
 			}
 			res.add(new ConvexPolygon(p));
 		}
-		return res;
+		return new FractureMap(res, true);
 	}
 	
 	public static Polygon vectorConvexHullIntersection(Polygon p, Vector2 pt, Vector2 intersector, Vector2 controlPt) {

@@ -7,7 +7,6 @@ import javax.media.opengl.*;
 import javax.media.opengl.awt.GLCanvas;
 import javax.swing.*;
 
-import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.Convex;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
@@ -23,12 +22,12 @@ public class SimulatorMain implements GLEventListener {
 	private OrthoMap orthoMap;
 
 	private JFrame frame;
-	private JFrame fracFrame;
 	private FrameExporter frameExporter;
 	private BuilderGUI gui;
 	private boolean simulate;
 
 	private FractureSystem fractureSystem = new FractureSystem();
+	private FractureMapFrame fracFrame;
 
 	public void start()
 	{
@@ -37,7 +36,6 @@ public class SimulatorMain implements GLEventListener {
 		gui = new BuilderGUI();
 
 		frame = new JFrame("CS5643 Fracture Simulator");
-		fracFrame = new JFrame("CS5643 Fracture Map");
 		GLProfile glp = GLProfile.getDefault();
 		GLCapabilities glc = new GLCapabilities(glp);
 		GLCanvas canvas = new GLCanvas(glc);
@@ -68,6 +66,8 @@ public class SimulatorMain implements GLEventListener {
 		frame.setLocation(200, 0);
 		frame.setVisible(true);
 		animator.start();
+		
+		fracFrame = new FractureMapFrame(fractureSystem);
 	}
 
 	private ArrayList<Vector2> points = new ArrayList<Vector2>();
@@ -272,6 +272,7 @@ public class SimulatorMain implements GLEventListener {
 			 */
 			public void actionPerformed(ActionEvent e)
 			{
+				fracFrame.setDrawing(false);
 				String cmd = e.getActionCommand();
 				System.out.println(cmd);
 
@@ -292,7 +293,8 @@ public class SimulatorMain implements GLEventListener {
 					task = new CreateWeldedTask();
 				}
 				else if(cmd.equals("Create (Map)")) {
-					task = new CreateFractureMapTask();
+					fracFrame.setDrawing(true);
+					task = null;
 				}
 				else if(cmd.equals("Next Map")) {
 					fractureSystem.nextMap();
@@ -426,13 +428,6 @@ public class SimulatorMain implements GLEventListener {
 				}
 			}
 
-		}
-		
-		class CreateFractureMapTask extends Task {
-			
-			public void reset() {
-				taskSelector.resetToRest();
-			}
 		}
 		
 		abstract class PickTask extends Task {
