@@ -80,6 +80,10 @@ public class FractureSystem {
 		fractureMaps.add(new FractureMap(convs, true));
 
 		// TODO: End of test stuff to remove
+		addWalls();
+	}
+	
+	public void addWalls() {
 
 		Rectangle bottom = new Rectangle(Constants.WIDTH, Constants.WALL_THICKNESS);
 		bottom.translate(Constants.WIDTH / 2, -Constants.WALL_THICKNESS / 2);
@@ -143,11 +147,13 @@ public class FractureSystem {
 		world.removeAllJoints();
 		polygons.clear();
 		weldedPolygons.clear();
+		addWalls();
 	}
 	
 	ArrayList<Polygon> fractured = new ArrayList<Polygon>();
 	ArrayList<Polygon> unfractured = new ArrayList<Polygon>();
 	ArrayList<Polygon> temp = new ArrayList<Polygon>();
+	ArrayList<Polygon> fuse_back = new ArrayList<Polygon>();
 	ArrayList<Polygon> fractured_pieces = new ArrayList<Polygon>();
 	
 	public void fracture(Fracturable wp, Vector2 impactPoint) {
@@ -160,6 +166,7 @@ public class FractureSystem {
 		unfractured.clear();
 		temp.clear();
 		fractured_pieces.clear();
+		fuse_back.clear();
 		
 		wp.polygonsWithinR(Constants.IMPACT_RADIUS, impactPoint, fractured, unfractured);
 		
@@ -168,7 +175,7 @@ public class FractureSystem {
 		}
 		for(Polygon p : temp) {
 			if(Utils.distancePointToPolygon(p, impactPoint) > Constants.IMPACT_RADIUS) {
-				unfractured.add(p);
+				fuse_back.add(p);
 			}
 			else {
 				fractured_pieces.add(p);
@@ -183,19 +190,23 @@ public class FractureSystem {
 			lowerLeft.multiply(Constants.EXPLOSION_IMPULSE * conv.getMass().getMass());
 			conv.applyImpulse(lowerLeft);
 		}
-		if(unfractured.isEmpty()) {
+		if(unfractured.isEmpty() && fuse_back.isEmpty()) {
 			remove(wp);
 			return;
 		}
+		for(Polygon p : unfractured) {
+			p.rotate(wp.getTransform().getRotation());
+			p.translate(wp.getTransform().getTranslation());
+		}
+		unfractured.addAll(fuse_back);
 		for (WeldedPolygon welded : WeldedPolygon.splitIslands(unfractured)) {
-			addWelded(welded);
-			welded.rotate(wp.getTransform().getRotation());
-			welded.translate(wp.getTransform().getTranslation());
+			if(welded.getMass().getMass() < Constants.MIN_MASS) continue;
 			welded.setLinearVelocity(wp.getLinearVelocity());
 			lowerLeft.set(welded.getWorldCenter()).subtract(impactPoint);
 			lowerLeft.normalize();
 			lowerLeft.multiply(Constants.EXPLOSION_IMPULSE * welded.getMass().getMass());
 			welded.applyImpulse(lowerLeft);
+			addWelded(welded);
 		}
 		remove(wp);
 	}
@@ -257,7 +268,6 @@ public class FractureSystem {
 	}
 
 	public void addWelded(WeldedPolygon p) {
-		p.setMass();
 		weldedPolygons.add(p);
 		world.addBody(p);
 	}
