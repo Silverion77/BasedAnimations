@@ -14,10 +14,7 @@ public class FractureSystem {
 	private World world;
 	private ArrayList<ConvexPolygon> polygons;
 	private ArrayList<WeldedPolygon> weldedPolygons;
-	private long timesteps = 0;
 	
-	private ConvexPolygon p1, p2;
-
 	private ArrayList<FractureMap> fractureMaps;
 	public int currentMap = 0;
 
@@ -48,7 +45,6 @@ public class FractureSystem {
 		points.add(v5);
 		points.add(v6);
 		ConvexPolygon p = new ConvexPolygon(points);
-		p1 = p;
 		addConvex(p);
 
 		ArrayList<Vector2> points2 = new ArrayList<Vector2>();
@@ -57,13 +53,12 @@ public class FractureSystem {
 		points2.add(u3);
 
 		ConvexPolygon q = new ConvexPolygon(points2);
-		p2 = q;
 		addConvex(q);
 
 		ArrayList<ConvexPolygon> convs = new ArrayList<ConvexPolygon>();
 		ArrayList<Vector2> pts = new ArrayList<Vector2>();
 
-		int numCubes = 20;
+		int numCubes = 5;
 		double cubeLength = 1.0 / numCubes;
 		// Make fracture map (4x4 cubes)
 		for(int x = 0; x < numCubes; x++) {
@@ -139,11 +134,65 @@ public class FractureSystem {
 		return picked;
 	}
 	
+	public void clear() {
+		world.removeAllBodies();
+		world.removeAllJoints();
+		polygons.clear();
+		weldedPolygons.clear();
+	}
+	
 	ArrayList<Polygon> fractured = new ArrayList<Polygon>();
 	ArrayList<Polygon> unfractured = new ArrayList<Polygon>();
+	ArrayList<Polygon> temp = new ArrayList<Polygon>();
+	ArrayList<Polygon> fractured_pieces = new ArrayList<Polygon>();
 	
 	public void fracture(Fracturable wp, Vector2 impactPoint) {
+		AABB box = wp.createAABB();
+		Vector2 lowerLeft = new Vector2(box.getMinX(), box.getMinY());
+		double maxSide = Math.max(box.getHeight(), box.getWidth());
+		FractureMap shifted = fractureMaps.get(currentMap).translateAndScale(lowerLeft, maxSide);
 		
+		fractured.clear();
+		unfractured.clear();
+		temp.clear();
+		fractured_pieces.clear();
+		
+		wp.polygonsWithinR(Constants.IMPACT_RADIUS, impactPoint, fractured, unfractured);
+		
+		for(Polygon p : fractured) {
+			temp.addAll(shifted.fracture(p, wp.getTransform()));
+		}
+		for(Polygon p : temp) {
+			if(Utils.distancePointToPolygon(p, impactPoint) > Constants.IMPACT_RADIUS) {
+				unfractured.add(p);
+			}
+			else {
+				fractured_pieces.add(p);
+			}
+		}
+		for(Polygon p : fractured_pieces) {
+			ConvexPolygon conv = new ConvexPolygon(p);
+			addConvex(conv);
+			conv.setLinearVelocity(wp.getLinearVelocity());
+			lowerLeft.set(conv.getWorldCenter()).subtract(impactPoint);
+			lowerLeft.normalize();
+			lowerLeft.multiply(Constants.EXPLOSION_IMPULSE * conv.getMass().getMass());
+			conv.applyImpulse(lowerLeft);
+		}
+		if(unfractured.isEmpty()) {
+			remove(wp);
+			return;
+		}
+		for (WeldedPolygon welded : WeldedPolygon.splitIslands(unfractured)) {
+			addWelded(welded);
+			welded.rotate(wp.getTransform().getRotation());
+			welded.setLinearVelocity(wp.getLinearVelocity());
+			lowerLeft.set(welded.getWorldCenter()).subtract(impactPoint);
+			lowerLeft.normalize();
+			lowerLeft.multiply(Constants.EXPLOSION_IMPULSE * welded.getMass().getMass());
+			welded.applyImpulse(lowerLeft);
+		}
+		remove(wp);
 	}
 
 	public void fractureConvex(ConvexPolygon cp, Vector2 impactPoint) {
@@ -209,7 +258,6 @@ public class FractureSystem {
 	}
 
 	public void update(double dt) {
-		timesteps++;
 		world.updatev(dt);
 	}
 

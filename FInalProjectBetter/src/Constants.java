@@ -9,7 +9,7 @@ public class Constants {
 	
 	public static double FRACTURE_PAD = 0.01;
 	
-	public static double EXPLOSION_IMPULSE = 50;
+	public static double EXPLOSION_IMPULSE = 10;
 	
 	public static Vector2 ZERO = new Vector2(0,0);
 	
