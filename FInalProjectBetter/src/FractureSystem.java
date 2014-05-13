@@ -230,6 +230,7 @@ public class FractureSystem {
 	
 	public void addFractureMap(FractureMap fm) {
 		fractureMaps.add(fm);
+		currentMap = fractureMaps.size() - 1;
 	}
 
 	public void addConvex(ArrayList<Vector2> points) {

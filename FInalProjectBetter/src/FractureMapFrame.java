@@ -79,6 +79,7 @@ public class FractureMapFrame implements GLEventListener {
 		FractureMap fm = ChrisVoronoiCalculation.generateVoronoi(points);
 		points.clear();
 		fs.addFractureMap(fm);
+		newMap = false;
 	}
 	
 	public void setDrawing(boolean isDrawing) {

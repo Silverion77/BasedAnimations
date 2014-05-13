@@ -13,6 +13,7 @@ public class ChrisVoronoiCalculation {
 		Vector2 midpt = new Vector2();
 		for (Vector2 pt : controlPts) {
 			Polygon p = new Rectangle(1, 1);
+			p.translate(.5, .5);
 			for (Vector2 otherpt : controlPts) {
 				if (pt.equals(otherpt))
 					continue;
@@ -29,15 +30,15 @@ public class ChrisVoronoiCalculation {
 		return new FractureMap(res, true);
 	}
 	
-	public static Polygon vectorConvexHullIntersection(Polygon p, Vector2 pt, Vector2 intersector, Vector2 controlPt) {
+	public static Polygon vectorConvexHullIntersection(Polygon p, Vector2 midpt, Vector2 intersector, Vector2 controlPt) {
 		ArrayList<Vector2> points = new ArrayList<Vector2>();
-		Vector2 q = pt.add(intersector.product(2));
-		Vector2 q2 = pt.difference(intersector.product(2));
-		boolean positive = Utils.cross2(intersector, controlPt.difference(pt)) >= 0;
+		Vector2 q = midpt.sum(intersector.product(2));
+		Vector2 q2 = midpt.difference(intersector.product(2));
+		boolean positive = Utils.cross2(intersector, midpt.difference(controlPt)) >= 0;
 		boolean otherPos;
 		Vector2 intersection;
 		for (int i = 0; i < p.getVertices().length; i++) {
-			otherPos = Utils.cross2(intersector, controlPt.difference(p.getVertices()[i])) >= 0;
+			otherPos = Utils.cross2(intersector, midpt.difference(p.getVertices()[i])) >= 0;
 			if (positive == otherPos)
 				points.add(new Vector2(p.getVertices()[i]));
 			intersection = Utils.intersectionLineSegments(p.getVertices()[i], p.getVertices()[(i+1)%p.getVertices().length], q, q2);
