@@ -70,7 +70,9 @@ public class WeldedPolygon extends Fracturable {
 		while(!allVerts.isEmpty()) {
 			System.out.println("running");
 			HashSet<Polygon> component = findConnected(allVerts);
-			components.add(new WeldedPolygon(component));
+			WeldedPolygon wp = new WeldedPolygon(component);
+			wp.setMass();
+			components.add(wp);
 			allVerts.removeAll(component);
 		}
 		return components;

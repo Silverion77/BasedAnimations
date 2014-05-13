@@ -19,4 +19,6 @@ public class Constants {
 	
 	public static double WALL_THICKNESS = 10;
 	
+	public static double MIN_MASS = 1e-50;
+	
 }
