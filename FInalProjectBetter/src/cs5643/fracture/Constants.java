@@ -1,3 +1,4 @@
+package cs5643.fracture;
 import org.dyn4j.geometry.Vector2;
 
 public class Constants {

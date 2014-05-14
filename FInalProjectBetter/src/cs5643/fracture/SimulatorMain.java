@@ -1,20 +1,43 @@
+package cs5643.fracture;
 import java.awt.GridLayout;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.media.opengl.*;
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLEventListener;
+import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
-import javax.swing.*;
+import javax.swing.AbstractButton;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JToggleButton;
+import javax.swing.SpringLayout;
+import javax.swing.WindowConstants;
 
 import org.dyn4j.geometry.Convex;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
 import org.dyn4j.geometry.decompose.Bayazit;
-import org.dyn4j.geometry.decompose.SweepLine;
 
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLReadBufferUtil;
+
+import cs5643.fracture.FractureMapFactory.BadMapException;
 
 public class SimulatorMain implements GLEventListener {
 
@@ -244,7 +267,7 @@ public class SimulatorMain implements GLEventListener {
 			guiFrame = new JFrame("Tasks");
 			guiFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			guiFrame.setLayout(new SpringLayout());
-			guiFrame.setLayout(new GridLayout(10,1));
+			guiFrame.setLayout(new GridLayout(12,1));
 
 			/* Add new task buttons here, then add their functionality below. */
 			ButtonGroup      buttonGroup  = new ButtonGroup();
@@ -255,6 +278,8 @@ public class SimulatorMain implements GLEventListener {
 					new JToggleButton ("Create (Map)", false),
 					new JButton("Next Map"),
 					new JButton("Previous Map"),
+					new JButton("Load Map"),
+					new JButton("Save Map"),
 					new JToggleButton ("Delete", false),
 					new JToggleButton ("Fracture", false),
 					new JToggleButton ("Shoot", false),
@@ -332,6 +357,12 @@ public class SimulatorMain implements GLEventListener {
 					}
 					else if(cmd.equals("Previous Map")) {
 						fractureSystem.previousMap();
+					}
+					else if(cmd.equals("Load Map")) {
+						loadMapFromFile();
+					}
+					else if(cmd.equals("Save Map")) {
+//						saveMapToFile();
 					}
 					else if(cmd.equals("Delete")) {
 						task = new DeleteTask();
@@ -547,6 +578,28 @@ public class SimulatorMain implements GLEventListener {
 					picked = null;
 				}
 			}
+		}
+	}
+	
+	private void loadMapFromFile() {
+		JFileChooser fc = new JFileChooser("./map");
+		int choice = fc.showOpenDialog(frame);
+		if (choice != JFileChooser.APPROVE_OPTION) return;
+		String fileName = fc.getSelectedFile().getAbsolutePath();
+
+		java.io.File file = new java.io.File(fileName);
+		if (!file.exists()) {
+			System.err.println("Error: Tried to load a frame from a non-existant file.");
+			return;
+		}
+
+		try {
+			FractureMap fm = FractureMapFactory.buildMap(new File(fileName));
+			fractureSystem.addFractureMap(fm);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (BadMapException e) {
+			e.printStackTrace();
 		}
 	}
 

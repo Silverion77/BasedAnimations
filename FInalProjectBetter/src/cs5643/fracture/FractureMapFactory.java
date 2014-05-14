@@ -1,11 +1,15 @@
+package cs5643.fracture;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Vector2;
 
-public class ChrisVoronoiCalculation {
+public class FractureMapFactory {
 	
 	public static FractureMap generateVoronoi(List<Vector2> controlPts) {
 		ArrayList<ConvexPolygon> res = new ArrayList<ConvexPolygon>();
@@ -46,5 +50,44 @@ public class ChrisVoronoiCalculation {
 				points.add(new Vector2(intersection));
 		}
 		return new Polygon(ConvexPolygon.makeHullFromPoints(points).toArray(new Vector2[0]));
+	}
+	
+	public static FractureMap buildMap(File file) throws FileNotFoundException, BadMapException {
+		Scanner s = new Scanner(file);
+		int line = 0;
+		ArrayList<ConvexPolygon> res = new ArrayList<ConvexPolygon>();
+		ArrayList<Vector2> points = new ArrayList<Vector2>();
+		while (s.hasNextLine()) {
+			String next = s.nextLine();
+			line++;
+			next = next.trim();
+			if (next.startsWith("#") || next.isEmpty()) {
+				if (points.size() < 3)
+					throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
+				res.add(new ConvexPolygon(new Polygon(ConvexPolygon.makeHullFromPoints(points).toArray(new Vector2[0]))));
+				points.clear();
+				continue;
+			}
+			String[] tokens = next.split(" ");
+			Vector2 pt = new Vector2();
+			pt.x = Double.parseDouble(tokens[0]);
+			pt.y = Double.parseDouble(tokens[1]);
+			points.add(pt);
+		}
+		if (points.size() < 3)
+			throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
+		res.add(new ConvexPolygon(new Polygon(ConvexPolygon.makeHullFromPoints(points).toArray(new Vector2[0]))));
+		return new FractureMap(res, true);
+	}
+	
+	/** An Exception class for dealing with bad input fracture maps. */
+	public static class BadMapException extends Exception {
+		public BadMapException(String s) {
+			super(s);
+		}
+
+		public BadMapException(int line, String s) {
+			super("Line " + line + ": " + s);
+		}
 	}
 }

@@ -1,3 +1,4 @@
+package cs5643.fracture;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
@@ -103,7 +104,7 @@ public class FractureSystem {
 			Vector2 randVec = new Vector2(rng.nextDouble(), rng.nextDouble());
 			pts.add(randVec);
 		}
-		return ChrisVoronoiCalculation.generateVoronoi(pts);
+		return FractureMapFactory.generateVoronoi(pts);
 	}
 
 	public void addWalls() {

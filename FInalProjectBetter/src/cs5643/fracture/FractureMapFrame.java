@@ -1,3 +1,4 @@
+package cs5643.fracture;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -76,7 +77,7 @@ public class FractureMapFrame implements GLEventListener {
 	
 	public void createFractureMapFromPoints() {
 		if (points.size() == 0) return;
-		FractureMap fm = ChrisVoronoiCalculation.generateVoronoi(points);
+		FractureMap fm = FractureMapFactory.generateVoronoi(points);
 		points.clear();
 		fs.addFractureMap(fm);
 		newMap = false;
