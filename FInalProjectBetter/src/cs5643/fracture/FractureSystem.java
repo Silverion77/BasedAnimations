@@ -301,6 +301,7 @@ public class FractureSystem {
 	private ArrayList<Vector2> bulletPoints = new ArrayList<Vector2>();
 
 	public void shootBullet(Vector2 origin, Vector2 target) {
+		if(origin.equals(target)) return;
 		Vector2 targetDir = target.difference(origin);
 		targetDir.normalize();
 		Vector2 pointy = origin.sum(targetDir);
@@ -313,7 +314,6 @@ public class FractureSystem {
 		bulletPoints.add(pointy);
 		bulletPoints.add(leftPoint);
 		bulletPoints.add(rightPoint);
-		System.out.println(pointy + ", " + leftPoint + ", " + rightPoint);
 		Bullet bullet = new Bullet(bulletPoints);
 		bullet.setBullet(true);
 
@@ -343,7 +343,6 @@ public class FractureSystem {
 		synchronized(lock) {
 			for(Bullet bullet : bullets) {
 				fracked.clear();
-				System.out.println(bullet.getLinearVelocity().getMagnitudeSquared());
 				for(ContactPoint cpt : bullet.getContacts(false)) {
 					Body other;
 					Vector2 point = cpt.getPoint();
@@ -353,6 +352,7 @@ public class FractureSystem {
 					else {
 						other = cpt.getBody1();
 					}
+					System.out.println(other.getClass());
 					if(other instanceof Fracturable && !(other instanceof Bullet)) {
 						bullet.awardKill();
 						Fracturable breakMe = (Fracturable)other;
@@ -366,10 +366,11 @@ public class FractureSystem {
 							}
 						}
 					}
-					else if(!(other instanceof Bullet)) {
-						bulletsToRemove.add(bullet);
-						bullet.setBullet(false);
-					}
+				}
+				if((bullet.getWorldCenter().x < 0 || bullet.getWorldCenter().x > Constants.WIDTH)
+						&& (bullet.getWorldCenter().y < 0 || bullet.getWorldCenter().y > Constants.HEIGHT)) {
+					bulletsToRemove.add(bullet);
+					bullet.setBullet(false);
 				}
 			}
 			for(Bullet p : bulletsToRemove) {

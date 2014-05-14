@@ -22,9 +22,9 @@ public class Constants {
 	
 	public static double MIN_MASS = 1e-7;
 	
-	public static double BULLET_VELOCITY = 50;
+	public static double BULLET_VELOCITY = 100;
 	
-	public static int KILLS_LIMIT = 20;
+	public static int KILLS_LIMIT = 5;
 	
 	public static double MIN_VELOCITY = 40;
 	public static double MIN_VEL_SQ = Math.pow(MIN_VELOCITY, 2);
