@@ -1,3 +1,4 @@
+package cs5643.fracture;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -8,7 +9,7 @@ import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Vector2;
 
-public class ChrisVoronoiCalculation {
+public class FractureMapFactory {
 	
 	public static FractureMap generateVoronoi(List<Vector2> controlPts) {
 		ArrayList<ConvexPolygon> res = new ArrayList<ConvexPolygon>();
@@ -51,7 +52,7 @@ public class ChrisVoronoiCalculation {
 		return new Polygon(ConvexPolygon.makeHullFromPoints(points).toArray(new Vector2[0]));
 	}
 	
-	public static FractureMap buildMap(File file) throws FileNotFoundException {
+	public static FractureMap buildMap(File file) throws FileNotFoundException, BadMapException {
 		Scanner s = new Scanner(file);
 		int line = 0;
 		ArrayList<ConvexPolygon> res = new ArrayList<ConvexPolygon>();
@@ -62,7 +63,7 @@ public class ChrisVoronoiCalculation {
 			next = next.trim();
 			if (next.startsWith("#") || next.isEmpty()) {
 				if (points.size() < 3)
-//					throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
+					throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
 				res.add(new ConvexPolygon(new Polygon(ConvexPolygon.makeHullFromPoints(points).toArray(new Vector2[0]))));
 				points.clear();
 				continue;
@@ -74,7 +75,7 @@ public class ChrisVoronoiCalculation {
 			points.add(pt);
 		}
 		if (points.size() < 3)
-//			throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
+			throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
 		res.add(new ConvexPolygon(new Polygon(ConvexPolygon.makeHullFromPoints(points).toArray(new Vector2[0]))));
 		return new FractureMap(res, true);
 	}

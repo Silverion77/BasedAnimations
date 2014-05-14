@@ -1,3 +1,4 @@
+package cs5643.fracture;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -35,6 +36,8 @@ import org.dyn4j.geometry.decompose.Bayazit;
 
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLReadBufferUtil;
+
+import cs5643.fracture.FractureMapFactory.BadMapException;
 
 public class SimulatorMain implements GLEventListener {
 
@@ -591,13 +594,13 @@ public class SimulatorMain implements GLEventListener {
 		}
 
 		try {
-			FractureMap fm = ChrisVoronoiCalculation.buildMap(new File(fileName));
+			FractureMap fm = FractureMapFactory.buildMap(new File(fileName));
 			fractureSystem.addFractureMap(fm);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace(); }
-//		} catch (BadMapException e) {
-//			e.printStackTrace();
-//		}
+			e.printStackTrace();
+		} catch (BadMapException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/// Used by the FrameExporter class
