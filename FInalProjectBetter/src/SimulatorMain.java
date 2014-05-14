@@ -33,8 +33,6 @@ import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
 import org.dyn4j.geometry.decompose.Bayazit;
 
-import ChrisVoronoiCalculation.BadMapException;
-
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLReadBufferUtil;
 
@@ -51,6 +49,9 @@ public class SimulatorMain implements GLEventListener {
 
 	private FractureSystem fractureSystem = new FractureSystem();
 	private FractureMapFrame fracFrame;
+
+	private boolean shooting = false;
+	private Vector2 shootingPoint = new Vector2(0, Constants.HEIGHT);
 
 	public void start()
 	{
@@ -89,7 +90,7 @@ public class SimulatorMain implements GLEventListener {
 		frame.setLocation(200, 0);
 		frame.setVisible(true);
 		animator.start();
-		
+
 		fracFrame = new FractureMapFrame(fractureSystem);
 	}
 
@@ -102,7 +103,7 @@ public class SimulatorMain implements GLEventListener {
 		}
 		try {
 			ConvexPolygon p = new ConvexPolygon(points);
-			fractureSystem.addConvex(p);
+			fractureSystem.add(p);
 			points.clear();
 		}
 		catch(IllegalArgumentException e) {
@@ -137,7 +138,7 @@ public class SimulatorMain implements GLEventListener {
 			wp.addPiece(poly);
 		}
 		wp.setMass();
-		fractureSystem.addWelded(wp);
+		fractureSystem.add(wp);
 		points.clear();
 	}
 
@@ -185,9 +186,24 @@ public class SimulatorMain implements GLEventListener {
 		}
 		gl2.glEnd();
 
+		if(shooting) {
+			gl2.glColor4f(0,0,1,1);
+			gl2.glBegin(GL2.GL_LINES);
+			gl2.glVertex2d(shootingPoint.x - 0.2, shootingPoint.y - 0.2);
+			gl2.glVertex2d(shootingPoint.x + 0.2, shootingPoint.y + 0.2);
+			gl2.glEnd();
+			gl2.glBegin(GL2.GL_LINES);
+			gl2.glVertex2d(shootingPoint.x - 0.2, shootingPoint.y + 0.2);
+			gl2.glVertex2d(shootingPoint.x + 0.2, shootingPoint.y - 0.2);
+			gl2.glEnd();
+		}
+
 		long time = System.currentTimeMillis();
 
 		if(simulate && time >= nextUpdateTime) {
+			if(frameExporter != null) {
+				frameExporter.writeFrame(gl2);
+			}
 			this.update();
 			nextUpdateTime = time + Constants.DT_MILLIS;
 		}
@@ -248,7 +264,7 @@ public class SimulatorMain implements GLEventListener {
 			guiFrame = new JFrame("Tasks");
 			guiFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			guiFrame.setLayout(new SpringLayout());
-			guiFrame.setLayout(new GridLayout(11,1));
+			guiFrame.setLayout(new GridLayout(12,1));
 
 			/* Add new task buttons here, then add their functionality below. */
 			ButtonGroup      buttonGroup  = new ButtonGroup();
@@ -263,6 +279,7 @@ public class SimulatorMain implements GLEventListener {
 					new JButton("Save Map"),
 					new JToggleButton ("Delete", false),
 					new JToggleButton ("Fracture", false),
+					new JToggleButton ("Shoot", false),
 			};
 
 			for(int i=0; i<buttons.length; i++) {
@@ -317,39 +334,46 @@ public class SimulatorMain implements GLEventListener {
 					}
 					fractureSystem.clear();
 				}
-				else if(cmd.equals("Drag")) {
-					task = new DragTask();
-				}
-				else if(cmd.equals("Create (Convex)")) {
-					task = new CreateConvexTask();
-				}
-				else if(cmd.equals("Create (Welded)")) {
-					task = new CreateWeldedTask();
-				}
-				else if(cmd.equals("Create (Map)")) {
-					fracFrame.setDrawing(true);
-					task = null;
-				}
-				else if(cmd.equals("Next Map")) {
-					fractureSystem.nextMap();
-				}
-				else if(cmd.equals("Previous Map")) {
-					fractureSystem.previousMap();
-				}
-				else if(cmd.equals("Load Map")) {
-					loadMapFromFile();
-				}
-				else if(cmd.equals("Save Map")) {
-					saveMapToFile();
-				}
-				else if(cmd.equals("Delete")) {
-					task = new DeleteTask();
-				}
-				else if(cmd.equals("Fracture")) {
-					task = new FractureTask();
-				}
 				else {
-					System.out.println("UNHANDLED ActionEvent: "+e);
+					shooting = false;
+					if(cmd.equals("Drag")) {
+						task = new DragTask();
+					}
+					else if(cmd.equals("Create (Convex)")) {
+						task = new CreateConvexTask();
+					}
+					else if(cmd.equals("Create (Welded)")) {
+						task = new CreateWeldedTask();
+					}
+					else if(cmd.equals("Create (Map)")) {
+						fracFrame.setDrawing(true);
+						task = null;
+					}
+					else if(cmd.equals("Next Map")) {
+						fractureSystem.nextMap();
+					}
+					else if(cmd.equals("Previous Map")) {
+						fractureSystem.previousMap();
+					}
+					else if(cmd.equals("Load Map")) {
+						loadMapFromFile();
+					}
+					else if(cmd.equals("Save Map")) {
+//						saveMapToFile();
+					}
+					else if(cmd.equals("Delete")) {
+						task = new DeleteTask();
+					}
+					else if(cmd.equals("Fracture")) {
+						task = new FractureTask();
+					}
+					else if(cmd.equals("Shoot")) {
+						shooting = true;
+						task = new ShootTask();
+					}
+					else {
+						System.out.println("UNHANDLED ActionEvent: "+e);
+					}
 				}
 			}
 		}
@@ -362,8 +386,6 @@ public class SimulatorMain implements GLEventListener {
 		public void mousePressed (MouseEvent e) { if(task!=null) task.mousePressed(e);  }
 		public void mouseReleased(MouseEvent e) { if(task!=null) task.mouseReleased(e); }
 		public void mouseClicked (MouseEvent e) {
-
-			orthoMap.getPoint(e, temp);
 			if(task != null){
 				task.mouseClicked(e);
 			}
@@ -395,6 +417,9 @@ public class SimulatorMain implements GLEventListener {
 				}
 				break;
 			case KeyEvent.VK_E:
+				if(frameExporter != null) {
+					frameExporter.flushFrames();
+				}
 				frameExporter = ((frameExporter==null) ? (new FrameExporter(true)) : null);
 				System.out.println("'e' : frameExporter = "+frameExporter);
 				break;
@@ -433,6 +458,23 @@ public class SimulatorMain implements GLEventListener {
 			abstract void reset();
 		}
 
+		class ShootTask extends Task {
+
+			public void reset() {
+				taskSelector.resetToRest();
+			}
+
+			public void mousePressed(MouseEvent e) {
+				if(e.getButton() == MouseEvent.BUTTON3) {
+					orthoMap.getPoint(e, shootingPoint);
+				}
+				else if(e.getButton() == MouseEvent.BUTTON1) {
+					orthoMap.getPoint(e, temp);
+					fractureSystem.shootBullet(shootingPoint, temp);
+				}
+			}
+		}
+
 		class CreateConvexTask extends Task {
 
 			public void reset() {
@@ -469,7 +511,7 @@ public class SimulatorMain implements GLEventListener {
 			}
 
 		}
-		
+
 		abstract class PickTask extends Task {
 			protected Fracturable picked = null;
 			protected Vector2 clicked = new Vector2();
@@ -552,10 +594,10 @@ public class SimulatorMain implements GLEventListener {
 			FractureMap fm = ChrisVoronoiCalculation.buildMap(new File(fileName));
 			fractureSystem.addFractureMap(fm);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (BadMapException e) {
-			e.printStackTrace();
-		}
+			e.printStackTrace(); }
+//		} catch (BadMapException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	/// Used by the FrameExporter class
@@ -576,6 +618,7 @@ public class SimulatorMain implements GLEventListener {
 	{
 		public boolean image = false;
 		private int nFrames  = 0;
+		ArrayList<GLReadBufferUtil> buffers = new ArrayList<GLReadBufferUtil>();
 
 		FrameExporter(boolean image) {
 			this.image = image;
@@ -596,7 +639,8 @@ public class SimulatorMain implements GLEventListener {
 				if (image) {
 					GLReadBufferUtil rbu = new GLReadBufferUtil(false, false);
 					rbu.readPixels(gl, false);
-					rbu.write(file);
+					buffers.add(rbu);
+					//					rbu.write(file);
 				}
 
 				System.out.println((timeNS/1000000)+"ms:  Wrote frame: "+filename);
@@ -608,7 +652,26 @@ public class SimulatorMain implements GLEventListener {
 
 			nFrames += 1;
 		}
+
+		void flushFrames() {
+			Thread t = new Thread(new Runnable() {
+				public void run() {
+					for(int i = 0; i < buffers.size(); i++) {
+						GLReadBufferUtil rbu = buffers.get(i);
+						String number   = Utils.getPaddedNumber(i, 5, "0");
+						String filename = "frames/export"+exportId+"-"+number+
+								(image ? ".png" : ".txt");/// Bug: DIRECTORY MUST EXIST!
+						java.io.File file = new java.io.File(filename);
+						System.out.println("Wrote frame " + filename);
+						rbu.write(file);
+					}
+					buffers.clear();
+				}
+			});
+			t.start();
+		}
 	}
+
 }
 
 

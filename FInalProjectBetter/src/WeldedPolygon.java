@@ -36,7 +36,6 @@ public class WeldedPolygon extends Fracturable {
 	}
 	
 	private static HashSet<Polygon> findConnected(HashSet<Polygon> verts) {
-		System.out.println("running " + verts.size());
 		HashSet<Polygon> frontier = new HashSet<Polygon>();
 		HashSet<Polygon> toAdd = new HashSet<Polygon>();
 		HashSet<Polygon> explored = new HashSet<Polygon>();
@@ -60,7 +59,6 @@ public class WeldedPolygon extends Fracturable {
 			}
 			toAdd.clear();
 		}
-		System.out.println(explored.size());
 		return explored;
 	}
 	
@@ -68,7 +66,6 @@ public class WeldedPolygon extends Fracturable {
 		HashSet<Polygon> allVerts = new HashSet<Polygon>(verts);
 		ArrayList<WeldedPolygon> components = new ArrayList<WeldedPolygon>();
 		while(!allVerts.isEmpty()) {
-			System.out.println("running");
 			HashSet<Polygon> component = findConnected(allVerts);
 			WeldedPolygon wp = new WeldedPolygon(component);
 			wp.setMass();

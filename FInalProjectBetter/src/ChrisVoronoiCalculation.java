@@ -51,7 +51,7 @@ public class ChrisVoronoiCalculation {
 		return new Polygon(ConvexPolygon.makeHullFromPoints(points).toArray(new Vector2[0]));
 	}
 	
-	public static FractureMap buildMap(File file) throws FileNotFoundException, BadMapException {
+	public static FractureMap buildMap(File file) throws FileNotFoundException {
 		Scanner s = new Scanner(file);
 		int line = 0;
 		ArrayList<ConvexPolygon> res = new ArrayList<ConvexPolygon>();
@@ -62,7 +62,7 @@ public class ChrisVoronoiCalculation {
 			next = next.trim();
 			if (next.startsWith("#") || next.isEmpty()) {
 				if (points.size() < 3)
-					throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
+//					throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
 				res.add(new ConvexPolygon(new Polygon(ConvexPolygon.makeHullFromPoints(points).toArray(new Vector2[0]))));
 				points.clear();
 				continue;
@@ -74,7 +74,7 @@ public class ChrisVoronoiCalculation {
 			points.add(pt);
 		}
 		if (points.size() < 3)
-			throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
+//			throw new BadMapException(line, "Convex in map must have at least 3 vertices.");
 		res.add(new ConvexPolygon(new Polygon(ConvexPolygon.makeHullFromPoints(points).toArray(new Vector2[0]))));
 		return new FractureMap(res, true);
 	}

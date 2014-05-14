@@ -1,11 +1,14 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 
 import javax.media.opengl.GL2;
 
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
+import org.dyn4j.dynamics.contact.ContactPoint;
 import org.dyn4j.geometry.AABB;
+import org.dyn4j.geometry.Mass;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Vector2;
@@ -16,13 +19,19 @@ public class FractureSystem {
 	private World world;
 	private ArrayList<ConvexPolygon> polygons;
 	private ArrayList<WeldedPolygon> weldedPolygons;
-	
+	private ArrayList<Bullet> bullets;
+	private ArrayList<Bullet> bulletsToRemove;
+
+	private Object lock = new Object();
+
 	private ArrayList<FractureMap> fractureMaps;
 	public int currentMap = 0;
 
 	public FractureSystem() {
 		polygons = new ArrayList<ConvexPolygon>();
 		weldedPolygons = new ArrayList<WeldedPolygon>();
+		bullets = new ArrayList<Bullet>();
+		bulletsToRemove = new ArrayList<Bullet>();
 		world = new World();
 		rng = new Random();
 
@@ -57,14 +66,14 @@ public class FractureSystem {
 
 		ConvexPolygon q = new ConvexPolygon(points2);
 		addConvex(q);
-		
+
 		fractureMaps = new ArrayList<FractureMap>();
 		fractureMaps.add(makeRandomFractureMap(10));
 
 		// TODO: End of test stuff to remove
 		addWalls();
 	}
-	
+
 	public FractureMap makeCubesFractureMap(int numCubes) {
 		ArrayList<ConvexPolygon> convs = new ArrayList<ConvexPolygon>();
 		ArrayList<Vector2> pts = new ArrayList<Vector2>();
@@ -87,7 +96,7 @@ public class FractureSystem {
 		}
 		return new FractureMap(convs, true);
 	}
-	
+
 	public FractureMap makeRandomFractureMap(int numPoints) {
 		ArrayList<Vector2> pts = new ArrayList<Vector2>();
 		for(int i = 0; i < numPoints; i++) {
@@ -96,24 +105,27 @@ public class FractureSystem {
 		}
 		return ChrisVoronoiCalculation.generateVoronoi(pts);
 	}
-	
+
 	public void addWalls() {
 
 		Rectangle bottom = new Rectangle(Constants.WIDTH, Constants.WALL_THICKNESS);
 		bottom.translate(Constants.WIDTH / 2, -Constants.WALL_THICKNESS / 2);
 		Body bottomWall = new Body();
 		bottomWall.addFixture(bottom);
+		bottomWall.setMass(Mass.Type.INFINITE);
 		world.addBody(bottomWall);
 
 		Rectangle top = new Rectangle(Constants.WIDTH, Constants.WALL_THICKNESS);
 		top.translate(Constants.WIDTH / 2, Constants.HEIGHT + Constants.WALL_THICKNESS / 2);
 		Body topWall = new Body();
 		topWall.addFixture(top);
+		topWall.setMass(Mass.Type.INFINITE);
 		world.addBody(topWall);
 
 		Rectangle left = new Rectangle(Constants.WALL_THICKNESS, Constants.HEIGHT + 2 * Constants.WALL_THICKNESS);
 		left.translate(-Constants.WALL_THICKNESS / 2, Constants.HEIGHT / 2);
 		Body leftWall = new Body();
+		leftWall.setMass(Mass.Type.INFINITE);
 		leftWall.addFixture(left);
 		world.addBody(leftWall);
 
@@ -121,20 +133,21 @@ public class FractureSystem {
 		right.translate(Constants.WIDTH + Constants.WALL_THICKNESS / 2, Constants.HEIGHT / 2);
 		Body rightWall = new Body();
 		rightWall.addFixture(right);
+		rightWall.setMass(Mass.Type.INFINITE);
 		world.addBody(rightWall);
 	}
-	
+
 	public void nextMap() {
 		currentMap = (currentMap + 1) % fractureMaps.size();
 	}
-	
+
 	public void previousMap() {
 		if (currentMap == 0)
 			currentMap = fractureMaps.size() - 1;
 		else
 			currentMap--;
 	}
-	
+
 	public FractureMap getCurrentMap() {
 		return fractureMaps.get(currentMap);
 	}
@@ -155,33 +168,36 @@ public class FractureSystem {
 		}
 		return picked;
 	}
-	
+
 	public void clear() {
-		world.removeAllBodies();
-		world.removeAllJoints();
-		polygons.clear();
-		weldedPolygons.clear();
-		addWalls();
+		synchronized(lock) {
+			world.removeAllBodies();
+			world.removeAllJoints();
+			polygons.clear();
+			weldedPolygons.clear();
+			bullets.clear();
+			addWalls();
+		}
 	}
-	
+
 	ArrayList<Polygon> fractured = new ArrayList<Polygon>();
 	ArrayList<Polygon> unfractured = new ArrayList<Polygon>();
 	ArrayList<Polygon> temp = new ArrayList<Polygon>();
 	ArrayList<Polygon> fuse_back = new ArrayList<Polygon>();
 	ArrayList<Polygon> fractured_pieces = new ArrayList<Polygon>();
-	
+
 	public void fracture(Fracturable wp, Vector2 impactPoint) {
-		
+
 		fractured.clear();
 		unfractured.clear();
 		temp.clear();
 		fractured_pieces.clear();
 		fuse_back.clear();
-		
+
 		wp.polygonsWithinR(Constants.IMPACT_RADIUS, impactPoint, fractured, unfractured);
-		
+
 		AABB box = null;
-		
+
 		for(Polygon p : fractured) {
 			if(box == null) {
 				box = p.createAABB(wp.getTransform());
@@ -190,15 +206,15 @@ public class FractureSystem {
 				box.union(p.createAABB());
 			}
 		}
-		
+
 		Vector2 lowerLeft = new Vector2(impactPoint.x, impactPoint.y);
-		
+
 		double maxXDiff = Math.max(box.getMaxX() - impactPoint.x, impactPoint.x - box.getMinX());
 		double maxYDiff = Math.max(box.getMaxY() - impactPoint.y, impactPoint.y - box.getMinY());
 		double maxSide = Math.max(2 * maxXDiff, 2 * maxYDiff);
-		
+
 		FractureMap shifted = fractureMaps.get(currentMap).translateAndScale(lowerLeft, maxSide);
-		
+
 		for(Polygon p : fractured) {
 			temp.addAll(shifted.fracture(p, wp.getTransform()));
 		}
@@ -239,47 +255,133 @@ public class FractureSystem {
 		}
 		remove(wp);
 	}
-	
+
 	public void addFractureMap(FractureMap fm) {
 		fractureMaps.add(fm);
 		currentMap = fractureMaps.size() - 1;
 	}
 
-	public void addConvex(ArrayList<Vector2> points) {
-		addConvex(new ConvexPolygon(points));
-	}
-
-	public void addConvex(ConvexPolygon p) {
+	private void addConvex(ConvexPolygon p) {
+		if(p.getMass().getMass() < Constants.MIN_MASS) return;
 		polygons.add(p);
 		world.addBody(p);
 	}
 
-	public void remove(Fracturable f) {
-		if(f instanceof ConvexPolygon) {
-			removeConvex((ConvexPolygon)f);
-		}
-		else if (f instanceof WeldedPolygon) {
-			removeWelded((WeldedPolygon)f);
+	public void add(Fracturable f) {
+		synchronized(lock) {
+			if(f instanceof ConvexPolygon) {
+				addConvex((ConvexPolygon)f);
+			}
+			else if(f instanceof WeldedPolygon) {
+				addWelded((WeldedPolygon)f);
+			}
 		}
 	}
 
-	public void removeConvex(ConvexPolygon p) {
+	public void remove(Fracturable f) {
+		synchronized(lock) {
+			if(f instanceof ConvexPolygon) {
+				removeConvex((ConvexPolygon)f);
+			}
+			else if (f instanceof WeldedPolygon) {
+				removeWelded((WeldedPolygon)f);
+			}
+		}
+	}
+
+	private void removeConvex(ConvexPolygon p) {
+		if(p instanceof Bullet) {
+			bullets.remove(p);
+		}
 		polygons.remove(p);
 		world.removeBody(p);
 	}
 
-	public void addWelded(WeldedPolygon p) {
+	private ArrayList<Vector2> bulletPoints = new ArrayList<Vector2>();
+
+	public void shootBullet(Vector2 origin, Vector2 target) {
+		Vector2 targetDir = target.difference(origin);
+		targetDir.normalize();
+		Vector2 pointy = origin.sum(targetDir);
+		// Rotate 90 degrees left
+		target.set(-targetDir.y, targetDir.x).multiply(0.2);
+		Vector2 leftPoint = origin.sum(target);
+		target.negate();
+		Vector2 rightPoint = origin.sum(target);
+		bulletPoints.clear();
+		bulletPoints.add(pointy);
+		bulletPoints.add(leftPoint);
+		bulletPoints.add(rightPoint);
+		System.out.println(pointy + ", " + leftPoint + ", " + rightPoint);
+		Bullet bullet = new Bullet(bulletPoints);
+		bullet.setBullet(true);
+
+		targetDir.multiply(Constants.BULLET_VELOCITY);
+		bullet.setLinearVelocity(targetDir);
+		bullet.setMass();
+
+		synchronized(lock) {
+			bullets.add(bullet);
+			world.addBody(bullet);
+		}
+	}
+
+	private void addWelded(WeldedPolygon p) {
 		weldedPolygons.add(p);
 		world.addBody(p);
 	}
 
-	public void removeWelded(WeldedPolygon p) {
+	private void removeWelded(WeldedPolygon p) {
 		weldedPolygons.remove(p);
 		world.removeBody(p);
 	}
 
+	HashSet<Fracturable> fracked = new HashSet<Fracturable>();
+	
+	private void processBulletFractures() {
+		synchronized(lock) {
+			for(Bullet bullet : bullets) {
+				fracked.clear();
+				System.out.println(bullet.getLinearVelocity().getMagnitudeSquared());
+				for(ContactPoint cpt : bullet.getContacts(false)) {
+					Body other;
+					Vector2 point = cpt.getPoint();
+					if(cpt.getBody1().equals(bullet)) {
+						other = cpt.getBody2();
+					}
+					else {
+						other = cpt.getBody1();
+					}
+					if(other instanceof Fracturable && !(other instanceof Bullet)) {
+						bullet.awardKill();
+						Fracturable breakMe = (Fracturable)other;
+						if(fracked.contains(breakMe)) continue;
+						else {
+							fracked.add(breakMe);
+							fracture(breakMe, point);
+							if(bullet.getKills() >= Constants.KILLS_LIMIT) {
+								bulletsToRemove.add(bullet);
+								bullet.setBullet(false);
+							}
+						}
+					}
+					else if(!(other instanceof Bullet)) {
+						bulletsToRemove.add(bullet);
+						bullet.setBullet(false);
+					}
+				}
+			}
+			for(Bullet p : bulletsToRemove) {
+				bullets.remove(p);
+				world.removeBody(p);
+			}
+			bulletsToRemove.clear();
+		}
+	}
+
 	public void update(double dt) {
 		world.updatev(dt);
+		processBulletFractures();
 	}
 
 	//	private Vector2 displayPoint = new Vector2();
@@ -311,21 +413,25 @@ public class FractureSystem {
 	}
 
 	public void display(GL2 gl) {
-//		fractureMaps.get(currentMap).display(gl);
-		for(ConvexPolygon p : polygons) {
-			p.display(gl);
-		}
-		for(WeldedPolygon p : weldedPolygons) {
-			p.display(gl);
-		}
-		if(display != null) {
-			for(int i = 0; i < display.length; i++) {
-				gl.glColor3f(colors[i][0], colors[i][1], colors[i][2]);
-				gl.glBegin(GL2.GL_POINTS);
-				gl.glVertex2d(display[i].x, display[i].y);
-				gl.glEnd();
+		//		fractureMaps.get(currentMap).display(gl);
+		synchronized(lock) {
+			for(ConvexPolygon p : polygons) {
+				p.display(gl);
+			}
+			for(WeldedPolygon p : weldedPolygons) {
+				p.display(gl);
+			}
+			for(ConvexPolygon p : bullets) {
+				p.display(gl);
+			}
+			if(display != null) {
+				for(int i = 0; i < display.length; i++) {
+					gl.glColor3f(colors[i][0], colors[i][1], colors[i][2]);
+					gl.glBegin(GL2.GL_POINTS);
+					gl.glVertex2d(display[i].x, display[i].y);
+					gl.glEnd();
+				}
 			}
 		}
 	}
-
 }
