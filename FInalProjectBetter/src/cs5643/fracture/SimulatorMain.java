@@ -583,7 +583,7 @@ public class SimulatorMain implements GLEventListener {
 	}
 
 	private void loadMapFromFile() {
-		JFileChooser fc = new JFileChooser("./map");
+		JFileChooser fc = new JFileChooser("./maps");
 		int choice = fc.showOpenDialog(frame);
 		if (choice != JFileChooser.APPROVE_OPTION) return;
 		String fileName = fc.getSelectedFile().getAbsolutePath();
@@ -605,7 +605,7 @@ public class SimulatorMain implements GLEventListener {
 	}
 
 	private void saveMapToFile() {
-		JFileChooser fc = new JFileChooser("./map");
+		JFileChooser fc = new JFileChooser("./maps");
 		int choice = fc.showOpenDialog(frame);
 		if (choice != JFileChooser.APPROVE_OPTION) return;
 		String fileName = fc.getSelectedFile().getAbsolutePath();
