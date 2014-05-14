@@ -352,7 +352,6 @@ public class FractureSystem {
 					else {
 						other = cpt.getBody1();
 					}
-					System.out.println(other.getClass());
 					if(other instanceof Fracturable && !(other instanceof Bullet)) {
 						bullet.awardKill();
 						Fracturable breakMe = (Fracturable)other;
