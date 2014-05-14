@@ -65,7 +65,6 @@ public class FractureMapFactory {
 			line++;
 			next = next.trim();
 			if (next.startsWith("#") || next.isEmpty()) {
-				System.out.println(points.size());
 				if (points.size() == 0) continue;
 				if (points.size() < 3) {
 					s.close();
