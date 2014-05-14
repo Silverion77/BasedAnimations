@@ -319,7 +319,7 @@ public class FractureSystem {
 
 		targetDir.multiply(Constants.BULLET_VELOCITY);
 		bullet.setLinearVelocity(targetDir);
-		bullet.setMass();
+		bullet.setMass(Mass.Type.INFINITE);
 
 		synchronized(lock) {
 			bullets.add(bullet);

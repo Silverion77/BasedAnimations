@@ -20,11 +20,11 @@ public class Constants {
 	
 	public static double WALL_THICKNESS = 10;
 	
-	public static double MIN_MASS = 1e-8;
+	public static double MIN_MASS = 1e-7;
 	
 	public static double BULLET_VELOCITY = 50;
 	
-	public static int KILLS_LIMIT = 3;
+	public static int KILLS_LIMIT = 20;
 	
 	public static double MIN_VELOCITY = 40;
 	public static double MIN_VEL_SQ = Math.pow(MIN_VELOCITY, 2);
