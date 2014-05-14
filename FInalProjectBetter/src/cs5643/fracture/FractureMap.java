@@ -102,5 +102,9 @@ public class FractureMap {
 			p.display(gl);
 		}
 	}
+	
+	public ConvexPolygon[] getPolygons() {
+		return polygons;
+	}
 
 }
