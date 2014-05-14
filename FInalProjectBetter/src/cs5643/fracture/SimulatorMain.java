@@ -11,6 +11,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -362,7 +363,7 @@ public class SimulatorMain implements GLEventListener {
 						loadMapFromFile();
 					}
 					else if(cmd.equals("Save Map")) {
-//						saveMapToFile();
+						saveMapToFile();
 					}
 					else if(cmd.equals("Delete")) {
 						task = new DeleteTask();
@@ -580,7 +581,7 @@ public class SimulatorMain implements GLEventListener {
 			}
 		}
 	}
-	
+
 	private void loadMapFromFile() {
 		JFileChooser fc = new JFileChooser("./map");
 		int choice = fc.showOpenDialog(frame);
@@ -589,7 +590,7 @@ public class SimulatorMain implements GLEventListener {
 
 		java.io.File file = new java.io.File(fileName);
 		if (!file.exists()) {
-			System.err.println("Error: Tried to load a frame from a non-existant file.");
+			System.err.println("Error: Tried to load a map from a non-existant file.");
 			return;
 		}
 
@@ -599,6 +600,20 @@ public class SimulatorMain implements GLEventListener {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (BadMapException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void saveMapToFile() {
+		JFileChooser fc = new JFileChooser("./map");
+		int choice = fc.showOpenDialog(frame);
+		if (choice != JFileChooser.APPROVE_OPTION) return;
+		String fileName = fc.getSelectedFile().getAbsolutePath();
+
+		java.io.File file = new java.io.File(fileName);
+		try {
+			FractureMapFactory.saveMap(file, fractureSystem.getCurrentMap());
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
