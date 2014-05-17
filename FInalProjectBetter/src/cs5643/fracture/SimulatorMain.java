@@ -268,7 +268,7 @@ public class SimulatorMain implements GLEventListener {
 			guiFrame = new JFrame("Tasks");
 			guiFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			guiFrame.setLayout(new SpringLayout());
-			guiFrame.setLayout(new GridLayout(12,1));
+			guiFrame.setLayout(new GridLayout(13,1));
 
 			/* Add new task buttons here, then add their functionality below. */
 			ButtonGroup      buttonGroup  = new ButtonGroup();
@@ -284,6 +284,7 @@ public class SimulatorMain implements GLEventListener {
 					new JToggleButton ("Delete", false),
 					new JToggleButton ("Fracture", false),
 					new JToggleButton ("Shoot", false),
+					new JButton ("Clean Up"),
 			};
 
 			for(int i=0; i<buttons.length; i++) {
@@ -374,6 +375,9 @@ public class SimulatorMain implements GLEventListener {
 					else if(cmd.equals("Shoot")) {
 						shooting = true;
 						task = new ShootTask();
+					}
+					else if(cmd.equals("Clean Up")) {
+						fractureSystem.cleanUpSmall(Constants.CLEAN_UP_LIMIT);
 					}
 					else {
 						System.out.println("UNHANDLED ActionEvent: "+e);

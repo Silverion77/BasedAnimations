@@ -14,13 +14,14 @@ public class Constants {
 	
 	public static Vector2 ZERO = new Vector2(0,0);
 	
-	public static double IMPACT_RADIUS = 1;
+	public static double IMPACT_RADIUS = 0.2;
 	
 	public static double CONTACT_EPSILON = 1e-23;
 	
 	public static double WALL_THICKNESS = 10;
 	
 	public static double MIN_MASS = 1e-6;
+	public static double CLEAN_UP_LIMIT = 1e-2;
 	
 	public static double BULLET_VELOCITY = 100;
 	

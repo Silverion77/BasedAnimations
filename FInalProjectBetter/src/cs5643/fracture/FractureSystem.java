@@ -210,6 +210,7 @@ public class FractureSystem {
 
 		Vector2 lowerLeft = new Vector2(impactPoint.x, impactPoint.y);
 
+		if(box == null) return;
 		double maxXDiff = Math.max(box.getMaxX() - impactPoint.x, impactPoint.x - box.getMinX());
 		double maxYDiff = Math.max(box.getMaxY() - impactPoint.y, impactPoint.y - box.getMinY());
 		double maxSide = Math.max(2 * maxXDiff, 2 * maxYDiff);
@@ -378,6 +379,25 @@ public class FractureSystem {
 			}
 			bulletsToRemove.clear();
 		}
+	}
+	
+	ArrayList<Fracturable> toRemove = new ArrayList<Fracturable>();
+	
+	public void cleanUpSmall(double massLimit) {
+		for(ConvexPolygon p : polygons) {
+			if(p.getMass().getMass() < massLimit) {
+				toRemove.add(p);
+			}
+		}
+		for(WeldedPolygon p : weldedPolygons) {
+			if(p.getMass().getMass() < massLimit) {
+				toRemove.add(p);
+			}
+		}
+		for(Fracturable f : toRemove) {
+			remove(f);
+		}
+		toRemove.clear();
 	}
 
 	public void update(double dt) {
