@@ -319,7 +319,6 @@ public class SimulatorMain implements GLEventListener {
 			impact_r.setEditable(false);
 			
 			JSlider impactR = new JSlider(JSlider.HORIZONTAL, 1, 10, 2);
-			impactR.setMajorTickSpacing(5);
 			impactR.setMinorTickSpacing(1);
 			
 			impactR.addChangeListener(new ChangeListener() {
