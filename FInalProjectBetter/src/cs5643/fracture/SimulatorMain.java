@@ -1,4 +1,6 @@
 package cs5643.fracture;
+import java.awt.Container;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,6 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.media.opengl.GL2;
@@ -26,9 +29,14 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.SpringLayout;
 import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.dyn4j.geometry.Convex;
 import org.dyn4j.geometry.Polygon;
@@ -268,7 +276,7 @@ public class SimulatorMain implements GLEventListener {
 			guiFrame = new JFrame("Tasks");
 			guiFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			guiFrame.setLayout(new SpringLayout());
-			guiFrame.setLayout(new GridLayout(13,1));
+			guiFrame.setLayout(new GridLayout(15,1));
 
 			/* Add new task buttons here, then add their functionality below. */
 			ButtonGroup      buttonGroup  = new ButtonGroup();
@@ -292,12 +300,53 @@ public class SimulatorMain implements GLEventListener {
 				guiFrame.add(buttons[i]);
 				buttons[i].addActionListener(taskSelector);
 			}
-
+			
+			addSliders();
+			
 			guiFrame.setSize(200,200);
 			guiFrame.pack();
 			guiFrame.setVisible(true);
 
 			task = null; // Set default task here
+		}
+		
+		/**
+		 * Adds sliders to GUI to change k constant values.
+		 * Listeners are added to update the textbox and alter the constant value.
+		 */
+		void addSliders() {
+			final JTextField impact_r = new JTextField("   " + Constants.IMPACT_RADIUS + "   ");
+			impact_r.setEditable(false);
+			
+			JSlider impactR = new JSlider(JSlider.HORIZONTAL, 1, 10, 2);
+			impactR.setMajorTickSpacing(5);
+			impactR.setMinorTickSpacing(1);
+			
+			impactR.addChangeListener(new ChangeListener() {
+				public void stateChanged(ChangeEvent e) {
+					JSlider source = (JSlider)e.getSource();
+					if (!source.getValueIsAdjusting()) {
+						Constants.IMPACT_RADIUS = source.getValue() / 10.;
+						impact_r.setText("   " + Constants.IMPACT_RADIUS + "   ");
+					}
+				}
+			});
+			
+			Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+			labelTable.put(new Integer(1), new JLabel("0.1"));
+			labelTable.put(new Integer(5), new JLabel("0.5"));
+			labelTable.put(new Integer(10), new JLabel("1"));
+			impactR.setLabelTable(labelTable);
+			impactR.setPaintTicks(true);
+			impactR.setPaintLabels(true);
+			
+			Container ir = new Container();
+			ir.setLayout(new FlowLayout());
+			ir.add(new JLabel("Impact Radius"));
+			ir.add(impact_r);
+			
+			guiFrame.add(ir);
+			guiFrame.add(impactR);
 		}
 
 		void writeFrame(GL2 gl)
@@ -314,15 +363,12 @@ public class SimulatorMain implements GLEventListener {
 		class TaskSelector implements ActionListener
 		{
 			/** 
-			 * Resets ParticleSystem to undeformed/material state,
-			 * disables the simulation, and removes the active Task.
+			 * Disables the simulation, and removes the active Task.
 			 */
 			void resetToRest() {
-				// TODO reset system
 				simulate = false;
 				task = null;
 			}
-
 			/** Creates new Task objects to handle specified button action.
 			 *  Switch to a new task, or perform custom button actions here.
 			 */
