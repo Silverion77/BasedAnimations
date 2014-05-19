@@ -23,6 +23,13 @@ Quick outline of all the buttons on the menu:
  - Clean up: Remove all objects of sufficiently small mass (small particles that slow down the simulation).
  - Impact radius slider: Drag to change impact radius.
 
+Submission videos:
+
+ - convex-creation.avi: Creating convex polygons.
+ - manual-fracture.avi: Fracturing using the manual fracture tool.
+ - shooting-fracture.avi: Fracturing using projectiles.
+ - welded-creation.avi: Creating welded polygons.
+
 Any instability or jitter is probably because of dyn4j, wink wink.
 
 Have fun!
